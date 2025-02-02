@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{{ review.title }}</title>
+</head>
+
+<body>
+  <h1>{{ review.title }}</h1>
+
+  <hr />
+
+  <p>
+    {{review.content}}
+  </p>
+  
+  <hr />
+
+  <p>
+    Tags:
+  {% for tag in tags %}
+
+    <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
+
+  {% endfor %}
+</p>
+
+  <hr />
+  {% for reply in replies %}
+  <p>
+    Posted {{ reply.time }} by user {{ reply.username }}:
+    <p>
+      {{ reply.content }}
+    </p>
+    
+  </p>
+
+  {% if reply.username == session.username %}
+  <p>
+    <a href="/edit/{{ reply.id }}">Edit</a> |
+    <a href="/remove/{{ reply.id }}">Delete</a>
+  </p>
+  {% endif %}
+  <hr />
+  {% endfor %}
+
+  {% if session.user_id %}
+
+  <form action="/new_reply" method="post">
+    <p>
+      Leave reply:<br />
+      <textarea name="content" rows="5" cols="40"></textarea>
+    </p>
+    <input type="hidden" name="review_id" value="{{ review_id }}" />
+    <input type="submit" value="Send" />
+  </form>
+
+  {% endif %}
+
+  <hr />
+
+  <p>
+    <a href="/">Return to front page</a>
+  </p>
+</body>
+
+</html>

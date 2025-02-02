@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Login</title>
+</head>
+
+
+
+<body>
+  {% if session.username %}
+  <p>
+    Signed in as {{ session.username }}
+  </p>
+  <p>
+    <a href="/logout">Logout</a>
+  </p>
+
+  <p>
+    <a href="/browse">Browse by tag</a>
+  </p>
+  
+  <hr />
+
+  <form action="/new_review" method="post">
+    Leave a review:
+    <p>
+      Book title<br />
+      <input type="text" name="title" />
+    </p>
+    <p>
+      Review<br />
+      <textarea name="content" rows="5" cols="40"></textarea>
+    </p>
+
+    <p>
+      Tags (multiple are seperated with ,)<br />
+      <input type="text" name="tags" />
+    </p>
+
+    <input type="submit" value="Submit" />
+  </form>
+  
+  {% else %}
+  <p>
+    <a href="/browse">Browse by tag</a>
+  </p>
+
+  <p>
+    <a href="/register">Create new account</a>
+  </p>
+
+  <hr />
+
+  <form action="/login" method="post">
+    <p>
+      Username: <br />
+      <input type="text" name="username" />
+    </p>
+    <p>
+      Password: <br />
+      <input type="password" name="password" />
+    </p>
+    <input type="submit" value="Log in" />
+  </form>
+  {% endif %}
+
+</body>
+
+</html>
