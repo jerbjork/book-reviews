@@ -4,11 +4,14 @@
 <head>
   <title>{{ review.title }}</title>
 </head>
-
 <body>
-  <h1>{{ review.title }}</h1>
 
+{% if review.removed == 0 %}
+
+
+  <h1>{{ review.title }}</h1>
   <hr />
+
 
   <p>
     {{review.content}}
@@ -24,6 +27,43 @@
 
   {% endfor %}
 </p>
+
+{% if review.user_id == session.user_id %}
+<p>
+  <a href="/edit/review/{{ review.id }}">Edit</a> |
+  <a href="/remove/review/{{ review.id }}">Delete</a>
+</p>
+
+{% endif %}
+
+{% if session.user_id %}
+
+<form action="/new_reply" method="post">
+  <p>
+    Leave reply:<br />
+    <textarea name="content" rows="5" cols="40"></textarea>
+  </p>
+  <input type="hidden" name="review_id" value="{{ review_id }}" />
+  <input type="submit" value="Send" />
+</form>
+
+{% endif %}
+
+<hr />
+
+{% else %}
+
+<h1>This post has been removed by user</h1>
+<hr />
+
+{% if review.user_id == session.user_id %}
+<p>
+  <a href="/edit/review/{{ review.id }}">Restore post</a>
+</p>
+
+{% endif %}
+
+{% endif %}
 
   <hr />
   {% for reply in replies %}
@@ -41,22 +81,7 @@
     <a href="/remove/{{ reply.id }}">Delete</a>
   </p>
   {% endif %}
-  <hr />
   {% endfor %}
-
-  {% if session.user_id %}
-
-  <form action="/new_reply" method="post">
-    <p>
-      Leave reply:<br />
-      <textarea name="content" rows="5" cols="40"></textarea>
-    </p>
-    <input type="hidden" name="review_id" value="{{ review_id }}" />
-    <input type="submit" value="Send" />
-  </form>
-
-  {% endif %}
-
   <hr />
 
   <p>

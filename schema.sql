@@ -13,7 +13,9 @@ CREATE TABLE reviews (
     id INTEGER PRIMARY KEY,
     title TEXT,
     content TEXT,
-    user_id INTEGER REFERENCES users
+    tag_string TEXT,
+    user_id INTEGER REFERENCES users,
+    removed INTEGER DEFAULT 0
 );
 
 

@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, redirect, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
@@ -8,9 +8,8 @@ app = Flask(__name__)
 app.secret_key = config.secret_key
 
 def add_review(title, content, tags):
-
-    sql = "INSERT INTO reviews (title, content, user_id) VALUES (?, ?, ?)"
-    db.execute(sql, [title, content, session["user_id"]])
+    sql = "INSERT INTO reviews (title, content, tag_string, user_id) VALUES (?, ?, ?, ?)"
+    db.execute(sql, [title, content, tags, session["user_id"]])
     review_id = db.last_insert_id()
     for tag in tags.split(", "):
         tag.lower()
@@ -28,9 +27,12 @@ def add_review(title, content, tags):
 
 @app.route("/edit/<int:reply_id>", methods=["GET", "POST"])
 def edit_reply(reply_id):
-    sql = "SELECT id, content FROM messages WHERE id = ?"
+    sql = "SELECT id, content, user_id FROM messages WHERE id = ?"
     reply = (db.query(sql, False, [reply_id]))
-
+    if not reply:
+        abort(404)
+    if reply["user_id"] != session["user_id"]:
+        abort(403)
     if request.method == "GET":
         return render_template("edit.html", reply=reply)
 
@@ -44,9 +46,12 @@ def edit_reply(reply_id):
     
 @app.route("/remove/<int:reply_id>", methods=["GET", "POST"])
 def remove_reply(reply_id):
-    sql = "SELECT id, content FROM messages WHERE id = ?"
+    sql = "SELECT id, content, user_id FROM messages WHERE id = ?"
     reply = (db.query(sql, False, [reply_id]))
-
+    if not reply:
+        abort(404)
+    if reply["user_id"] != session["user_id"]:
+        abort(403)
     if request.method == "GET":
         return render_template("delete.html", reply=reply)
 
@@ -57,7 +62,42 @@ def remove_reply(reply_id):
                 sql = "DELETE FROM messages WHERE id = ?"
                 db.execute(sql, [reply_id])
         return redirect("/review/" + str(review_id[0]))
+    
+@app.route("/edit/review/<int:review_id>", methods=["GET", "POST"])
+def edit_review(review_id):
+    sql = "SELECT * FROM reviews WHERE id = ?"
+    review = (db.query(sql, False, [review_id]))
+    if not review:
+        abort(404)
+    if review["user_id"] != session["user_id"]:
+        abort(403)
+    if request.method == "GET":
+        return render_template("edit_review.html", review=review)
 
+    if request.method == "POST":
+        title = request.form["title"]
+        content = request.form["content"]
+        tags = request.form["tags"]
+        sql = "UPDATE reviews SET (title, content, tag_string, removed) = (?, ?, ?, 0)  WHERE id = ?"
+        db.execute(sql, [title, content, tags, review_id])
+        return redirect("/review/" + str(review_id))
+    
+@app.route("/remove/review/<int:review_id>", methods=["GET", "POST"])
+def remove_review(review_id):
+    sql = "SELECT * FROM reviews WHERE id = ?"
+    review = (db.query(sql, False, [review_id]))
+    if not review:
+        abort(404)
+    if review["user_id"] != session["user_id"]:
+        abort(403)
+    if request.method == "GET":
+        return render_template("delete_review.html", review=review)
+
+    if request.method == "POST":
+        if "continue" in request.form:
+            sql = "UPDATE reviews SET removed = ? WHERE id = ?"
+            db.execute(sql, [1, review_id])
+        return redirect("/review/" + str(review_id))
 
 @app.route("/new_review", methods=["POST"])
 def new_review():
@@ -69,10 +109,10 @@ def new_review():
 
 @app.route("/review/<int:review_id>")
 def show_review(review_id):
-    sql = "SELECT title, content FROM reviews WHERE id = ?"
+    sql = "SELECT * FROM reviews WHERE id = ?"
     review = db.query(sql, True, [review_id])
-    if review == []:
-        return "Review not found"
+    if not review:
+            abort(404)
     else:
         review = review[0]
         sql = "SELECT t.title FROM tags t, attach a WHERE a.review_id = ? AND t.id = a.tag_id"
@@ -89,7 +129,7 @@ def browse():
 
 @app.route("/tags/<string:tag>")
 def show_tags(tag):
-    sql = "SELECT u.username, r.id, r.title FROM users u, reviews r, tags t, attach a WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"
+    sql = "SELECT u.username, r.id, r.title, r.removed FROM users u, reviews r, tags t, attach a WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"
     reviews = (db.query(sql, True, [tag]))
     return render_template("tags.html", reviews=reviews, tag=tag)
 
