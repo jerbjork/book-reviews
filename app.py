@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, redirect, render_template, request, session, abort
+from flask import Flask, redirect, render_template, request, session, abort, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
@@ -24,6 +24,50 @@ def add_review(title, content, tags):
         sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
         db.execute(sql, [tag_id, review_id])
     return review_id
+
+@app.route("/add_image", methods=["GET", "POST"])
+def add_image():
+
+    if request.method == "GET":
+        return render_template("add_image.html")
+
+    if request.method == "POST":
+        file = request.files["image"]
+        if not file.filename.endswith((".jpg", ".jpeg", ".png")):
+            return "Incorrect file fromat"
+
+        image = file.read()
+        if len(image) > 1000 * 1024:
+            return "Filesize exceeds 1 MB"
+
+        user_id = session["user_id"]
+        sql = "UPDATE users SET image = ? WHERE id = ?"
+        db.execute(sql, [image, user_id])
+        return redirect("/user/" + str(user_id))
+    
+@app.route("/image/<int:user_id>")
+def show_image(user_id):
+    sql = "SELECT image FROM users WHERE id = ?"
+    image = (db.query(sql, False, [user_id]))
+    if not image:
+        abort(404)
+    response = make_response(bytes(image[0]))
+    response.headers.set("Content-Type", "image/jpeg")
+    return response
+
+@app.route("/user/<int:user_id>", methods=["GET"])
+def show_user(user_id):
+    sql = "SELECT id, username , image FROM users WHERE id = ?"
+    user = (db.query(sql, False, [user_id]))
+    if not user:
+        abort(404)
+    sql = "SELECT * FROM reviews WHERE user_id = ?"
+    reviews = (db.query(sql, True, [user_id]))
+    sql = "SELECT * FROM messages WHERE user_id = ?"
+    messages = (db.query(sql, True, [user_id]))
+
+    return render_template("userpage.html", user=user, reviews=reviews, messages=messages)
+
 
 @app.route("/edit/<int:reply_id>", methods=["GET", "POST"])
 def edit_reply(reply_id):
@@ -117,7 +161,7 @@ def show_review(review_id):
         review = review[0]
         sql = "SELECT t.title FROM tags t, attach a WHERE a.review_id = ? AND t.id = a.tag_id"
         tags = (db.query(sql, True, [review_id]))
-        sql = "SELECT u.username, m.content, m.id, m.time FROM users u, messages m, reviews r WHERE r.id = ? AND r.id = m.review_id AND m.user_id = u.id"
+        sql = "SELECT u.username, m.content, m.id, m.time, m.user_id FROM users u, messages m, reviews r WHERE r.id = ? AND r.id = m.review_id AND m.user_id = u.id"
         replies = (db.query(sql, True, [review_id]))
         return render_template("review.html", review=review, tags=tags, replies=replies, review_id=review_id)
     
@@ -129,7 +173,7 @@ def browse():
 
 @app.route("/tags/<string:tag>")
 def show_tags(tag):
-    sql = "SELECT u.username, r.id, r.title, r.removed FROM users u, reviews r, tags t, attach a WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"
+    sql = "SELECT u.username, r.id, r.title, r.user_id, r.removed FROM users u, reviews r, tags t, attach a WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"
     reviews = (db.query(sql, True, [tag]))
     return render_template("tags.html", reviews=reviews, tag=tag)
 
@@ -189,6 +233,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    del session["username"]
-    del session["user_id"]
+    if "user_id" in session:
+        del session["username"]
+        del session["user_id"]
     return redirect("/")

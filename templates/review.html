@@ -17,6 +17,9 @@
     {{review.content}}
   </p>
   
+  <a href="/user/{{ review.user_id }}">{{ review.user_id }}</a>
+
+
   <hr />
 
   <p>
@@ -68,7 +71,7 @@
   <hr />
   {% for reply in replies %}
   <p>
-    Posted {{ reply.time }} by user {{ reply.username }}:
+    Posted {{ reply.time }} by user <a href="/user/{{ reply.user_id }}">{{ reply.username }}</a>:
     <p>
       {{ reply.content }}
     </p>

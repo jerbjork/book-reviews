@@ -14,7 +14,8 @@ Currently implemented:
 <ul>
 <li>The user can create an account and log onto the site.</li>
 <li>The user can post reviews.</li>
-<li>Reviews can be found by selecting genre.</li>
+<li>Reviews can be found by choosing a tag.</li>
 <li>Users can leave comments on reviews, these comments are displayed below the review.</li>
-<li>Users can edit or remove their own comments.</li>
+<li>Users can edit or remove their own comments and reviews.</li>
+<li>The user page shows a profile picture, and lists the reviews the user has written.</li>
 </ul>
