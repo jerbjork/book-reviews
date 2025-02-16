@@ -21,9 +21,9 @@ Currently implemented:
 </ul>
 
 Instructions:
-git clone https://github.com/jerbjork/book-reviews.git
-cd book-reviews/
-sqlite3 database.db < schema.sql
-sqlite3 database.db < init.sql
-pip install flask
-flask run
+<p>git clone https://github.com/jerbjork/book-reviews.git</p>
+<p>cd book-reviews/</p>
+<p>sqlite3 database.db < schema.sql</p>
+<p>sqlite3 database.db < init.sql</p>
+<p>pip install flask</p>
+<p>flask run</p>
