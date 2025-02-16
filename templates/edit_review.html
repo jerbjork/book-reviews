@@ -7,7 +7,7 @@
 
 <body>
 
-<form action="/edit/review/{{ review.id }}" method="post">
+<form action="/edit_review/{{ review.id }}" method="post">
   Edit review:
   <p>
     Book title<br />
@@ -17,15 +17,8 @@
     Review<br />
     <textarea name="content" rows="5" cols="40"> {{ review.content }}</textarea>
   </p>
-
-  <p>
-    Tags (multiple are seperated with ,)<br />
-    <input type="text" name="tags" value="{{ review.tag_string }}" />
-  </p>
-
   <input type="submit" value="Submit" />
 </form>
 
 </body>
-
 </html>

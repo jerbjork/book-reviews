@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Login</title>
+</head>
+
+<body>
+
+  <form action="/add_review" method="post">
+    Leave a review:
+    <p>
+      Book title<br />
+      <input type="text" name="title" />
+    </p>
+    <p>
+      Review<br />
+      <textarea name="content" rows="5" cols="40"></textarea>
+    </p>
+    <p>
+      Tags (multiple are seperated with ", ")<br />
+      <input type="text" name="tags" />
+    </p>
+    <input type="submit" value="Submit" />
+  </form>
+
+  <hr />
+  
+  <p>
+    <a href="/">Return to front page</a>
+  </p>
+
+</body>
+</html>

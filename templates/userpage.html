@@ -4,44 +4,46 @@
 <head>
   <title>{{ user.username }}</title>
 </head>
-  <h2> User {{ user.username }}</h2>
+  
 <body>
+  <h2> User {{ user.username }}</h2>
   {% if user.id == session.user_id %}
-  {% if user.image %}
-  <p>
-  <a href="/add_image"> Change profile picture</a>
-  </p>
-  {% else %}
-  <p>
-  <a href="/add_image"> Add profile picture</a>
-  </p>
+    {% if user.image %}
+      <p>
+      <a href="/add_image"> Change profile picture</a>
+      </p>
+    {% else %}
+      <p>
+      <a href="/add_image"> Add profile picture</a>
+      </p>
+    {% endif %}
   {% endif %}
-  {% endif %}
   {% if user.image %}
-  <a href="/image/{{ user.id }}">
+    <a href="/image/{{ user.id }}">
     <img src="/image/{{ user.id }}" width="auto" height="200px"/>
     </a>
   {% endif %}
  
   {% if not reviews %}
-  <p> No reviews found</p>
+    <p> No reviews found</p>
   {% else %}
-  <p> Reviews posted by {{ user.username}}:</p>
-  {% for review in reviews %}
-  {% if review.removed == 0 %}
+    <p> Reviews posted by {{ user.username}}:</p>
 
-  <p>
-  <a href="/review/{{ review.id }}">{{ review.title }}</a>
-  {% else %}
-  <a href="/review/{{ review.id }}">Removed</a>
-  </p>
-  {% endif %}
+  {% for review in reviews %}
+    {% if review.removed == 0 %}
+      <p>
+      <a href="/review/{{ review.id }}">{{ review.title }}</a>
+    {% else %}
+      <a href="/review/{{ review.id }}">Removed</a>
+      </p>
+    {% endif %}
   {% endfor %}
   {% endif %}
 
+  <hr />
   <p>
     <a href="/">Return to front page</a>
   </p>
-</body>
 
+</body>
 </html>

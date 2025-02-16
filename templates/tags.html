@@ -9,21 +9,23 @@
   <h1>{{ tag }}</h1>
 
   {% for review in reviews %}
-  {% if review.removed == 0 %}
-  <p>
-  <a href="/review/{{ review.id }}">{{ review.title }}</a> submitted by  <a href="/user/{{ review.user_id }}">{{ review.username }}</a>
-  </p>
-  {% else %}
-  <p>
-    <a href="/review/{{ review.id }}">Removed</a> submitted by  {{ review.username }}
-  </p>
-  {% endif %}
-{% endfor %}
+    {% if review.removed == 0 %}
+      <p>
+      <a href="/review/{{ review.id }}">{{ review.title }}</a> submitted by  <a href="/user/{{ review.user_id }}">{{ review.username }}</a>
+      </p>
+    {% else %}
+      <p>
+        <a href="/review/{{ review.id }}">Removed</a> submitted by  {{ review.username }}
+      </p>
+    {% endif %}
+  {% endfor %}
 
   <hr />
+
   <p>
     <a href="/">Return to front page</a>
   </p>
+  
 </body>
 
 </html>

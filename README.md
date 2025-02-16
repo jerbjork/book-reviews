@@ -16,6 +16,14 @@ Currently implemented:
 <li>The user can post reviews.</li>
 <li>Reviews can be found by choosing a tag.</li>
 <li>Users can leave comments on reviews, these comments are displayed below the review.</li>
-<li>Users can edit or remove their own comments and reviews.</li>
+<li>Users can edit or remove their own comments.</li>
 <li>The user page shows a profile picture, and lists the reviews the user has written.</li>
 </ul>
+
+Instructions:
+git clone https://github.com/jerbjork/book-reviews.git
+cd book-reviews/
+sqlite3 database.db < schema.sql
+sqlite3 database.db < init.sql
+pip install flask
+flask run

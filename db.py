@@ -14,12 +14,9 @@ def execute(sql, params=[]):
     g.last_insert_id = result.lastrowid
     con.close()
 
-def query(sql, all: bool, params=[]):
+def query(sql, params=[]):
     con = get_connection()
-    if all:
-        result = con.execute(sql, params).fetchall()
-    else:
-        result = con.execute(sql, params).fetchone()
+    result = con.execute(sql, params).fetchall()
     con.close()
     return result
 

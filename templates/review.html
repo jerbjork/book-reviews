@@ -4,92 +4,71 @@
 <head>
   <title>{{ review.title }}</title>
 </head>
+
 <body>
 
 {% if review.removed == 0 %}
-
-
   <h1>{{ review.title }}</h1>
-  <hr />
-
-
   <p>
     {{review.content}}
   </p>
-  
-  <a href="/user/{{ review.user_id }}">{{ review.user_id }}</a>
-
-
-  <hr />
-
+  <a href="/user/{{ review.user_id }}">Submitted by: {{ user.username }}</a>
   <p>
     Tags:
-  {% for tag in tags %}
-
-    <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
-
-  {% endfor %}
-</p>
-
-{% if review.user_id == session.user_id %}
-<p>
-  <a href="/edit/review/{{ review.id }}">Edit</a> |
-  <a href="/remove/review/{{ review.id }}">Delete</a>
-</p>
-
-{% endif %}
-
-{% if session.user_id %}
-
-<form action="/new_reply" method="post">
-  <p>
-    Leave reply:<br />
-    <textarea name="content" rows="5" cols="40"></textarea>
+    {% for tag in tags %}
+      <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
+    {% endfor %}
   </p>
-  <input type="hidden" name="review_id" value="{{ review_id }}" />
-  <input type="submit" value="Send" />
-</form>
-
-{% endif %}
-
-<hr />
-
-{% else %}
-
-<h1>This post has been removed by user</h1>
-<hr />
-
-{% if review.user_id == session.user_id %}
-<p>
-  <a href="/edit/review/{{ review.id }}">Restore post</a>
-</p>
-
-{% endif %}
-
-{% endif %}
-
-  <hr />
-  {% for reply in replies %}
-  <p>
-    Posted {{ reply.time }} by user <a href="/user/{{ reply.user_id }}">{{ reply.username }}</a>:
+  
+  {% if review.user_id == session.user_id %}
     <p>
-      {{ reply.content }}
+      <a href="/edit_review/{{ review.id }}">Edit</a> |
+      <a href="/remove_review/{{ review.id }}">Delete</a>
     </p>
-    
-  </p>
-
-  {% if reply.username == session.username %}
-  <p>
-    <a href="/edit/{{ reply.id }}">Edit</a> |
-    <a href="/remove/{{ reply.id }}">Delete</a>
-  </p>
   {% endif %}
-  {% endfor %}
   <hr />
 
+    {% if session.user_id %}
+    <form action="/new_message" method="post">
+      <p>
+        Leave reply:<br />
+        <textarea name="content" rows="5" cols="40"></textarea>
+      </p>
+      <input type="hidden" name="review_id" value="{{ review.id }}" />
+      <input type="submit" value="Send" />
+    </form>
+    {% endif %}
+
+  {% else %}
+    <h1>This post has been removed by user</h1>
+
+    {% if review.user_id == session.user_id %}
+      <p>
+        <a href="/edit_review/{{ review.id }}">Restore post</a>
+      </p>
+    {% endif %}
+  {% endif %}
+
+  {% for message in messages %}
+    <p>
+      Posted {{ message.time }} by user <a href="/user/{{ message.user_id }}">{{ message.username }}</a>:
+    </p>
+    <p>
+      {{ message.content }}
+    </p>
+
+    {% if message.username == session.username %}
+    <p>
+      <a href="/edit_message/{{ message.id }}">Edit</a> |
+      <a href="/remove_message/{{ message.id }}">Delete</a>
+    </p>
+    {% endif %}
+  {% endfor %}
+
+  <hr />
   <p>
     <a href="/">Return to front page</a>
   </p>
+  
 </body>
-
 </html>

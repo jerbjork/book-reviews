@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Edit message</title>
+</head>
+
+<Body>
+
+  <form action="/edit_message/{{ message.id }}" method="post">
+    <p>
+      Message:<br />
+      <textarea name="content" rows="5" cols="40">{{ message.content }}</textarea>
+    </p>
+    <input type="submit" value="Update" />
+  </form>
+
+  <hr />
+  
+  <p>
+    <a href="/">Return to front page</a>
+  </p>
+
+</Body>
+</html>

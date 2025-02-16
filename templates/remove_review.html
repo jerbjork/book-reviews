@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Delete review</title>
+</head>
+
+<body>
+
+  <form action="/remove_review/{{ review.id }}" method="post">
+    <p>
+      Confirm deleting message
+    </p>
+    <input type="submit" name="continue" value="Confirm" />
+    <input type="submit" name="cancel" value="Cancel" />
+  </form>
+
+</body>
+</html>
