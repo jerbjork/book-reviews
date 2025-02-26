@@ -1,10 +1,15 @@
 import sqlite3
+import secrets
 from flask import Flask, redirect, render_template, request, session, abort, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
 app = Flask(__name__)
 app.secret_key = config.secret_key
+
+def check_csrf():
+    if request.form["csrf_token"] != session["csrf_token"]:
+        abort(403)
 
 @app.route("/")
 def index():
@@ -44,6 +49,7 @@ def login():
             if check_password_hash(password_hash[0][1], password):
                 session["username"] = username
                 session["user_id"] = password_hash[0][0]
+                session["csrf_token"] = secrets.token_hex(16)
                 return redirect("/")
             
         return "Incorrect username or password"
@@ -53,6 +59,7 @@ def logout():
     if "user_id" in session:
         del session["username"]
         del session["user_id"]
+        del session["csrf_token"]
     return redirect("/")
 
 @app.route("/user/<int:user_id>", methods=["GET"])
@@ -77,6 +84,7 @@ def add_image():
         return render_template("add_image.html")
 
     if request.method == "POST":
+        check_csrf()
         file = request.files["image"]
         if not file.filename.endswith((".jpg", ".jpeg", ".png")):
             return "Incorrect file fromat"
@@ -115,6 +123,7 @@ def edit_message(message_id):
         return render_template("edit_message.html", message=message)
 
     if request.method == "POST":
+        check_csrf()
         content = request.form["content"]
         sql = "UPDATE messages SET content = ? WHERE id = ?"
         db.execute(sql, [content, message_id])
@@ -137,6 +146,7 @@ def remove_message(message_id):
         return render_template("remove_message.html", message=message)
 
     if request.method == "POST":
+        check_csrf()
 
         if "continue" in request.form:
                 sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
@@ -161,6 +171,7 @@ def edit_review(review_id):
         return render_template("edit_review.html", review=review)
 
     if request.method == "POST":
+        check_csrf()
         title = request.form["title"]
         content = request.form["content"]
         sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
@@ -181,7 +192,7 @@ def remove_review(review_id):
         return render_template("remove_review.html", review=review[0])
 
     if request.method == "POST":
-
+        check_csrf()
         if "continue" in request.form:
             sql = "UPDATE reviews SET removed = ? WHERE id = ?"
             db.execute(sql, [1, review_id])
@@ -194,6 +205,7 @@ def new_review():
         return render_template("add_review.html")
     
     if request.method == "POST":
+        check_csrf()
         title = request.form["title"]
         content = request.form["content"]
         tags = request.form["tags"]
@@ -270,6 +282,7 @@ def create():
 
 @app.route("/new_message", methods=["POST"])
 def new_message():
+    check_csrf()
     content = request.form["content"]
     review_id = request.form["review_id"]
     sql = "INSERT INTO messages (content, time, user_id, review_id) VALUES (?, datetime('now'), ?, ?)"

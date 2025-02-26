@@ -12,6 +12,7 @@
     Review<br />
     <textarea name="content" rows="5" cols="40"> {{ review.content }}</textarea>
   </p>
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Submit" />
 </form>
 {% endblock %}
