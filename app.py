@@ -29,20 +29,24 @@ def search():
         results = db.query(sql, ["%" + query + "%", "%" + query + "%"])
         return render_template("search.html", query=query, results=results)
 
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    username = request.form["username"]
-    password = request.form["password"]
-    sql = "SELECT id, password_hash FROM users WHERE username = ?"
-    password_hash = (db.query(sql, [username]))
-    if password_hash:
+    if request.method == "GET":
+        return render_template("login.html")
 
-        if check_password_hash(password_hash[0][1], password):
-            session["username"] = username
-            session["user_id"] = password_hash[0][0]
-            return redirect("/")
-        
-    return "Incorrect username or password"
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        sql = "SELECT id, password_hash FROM users WHERE username = ?"
+        password_hash = (db.query(sql, [username]))
+        if password_hash:
+
+            if check_password_hash(password_hash[0][1], password):
+                session["username"] = username
+                session["user_id"] = password_hash[0][0]
+                return redirect("/")
+            
+        return "Incorrect username or password"
 
 @app.route("/logout")
 def logout():
