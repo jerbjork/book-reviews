@@ -7,6 +7,12 @@ import db
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
+def check_length(text, lower_limit, upper_limit):
+        if len(text) < lower_limit:
+            abort(411)
+        if len(text) > upper_limit:
+            abort(413)
+
 def check_csrf():
     if request.form["csrf_token"] != session["csrf_token"]:
         abort(403)
@@ -27,6 +33,7 @@ def search():
     
     if request.method == "POST":
         query = request.form["query"]
+        check_length(query, 3, 100)
         sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
                 FROM users u, reviews r
                 WHERE (u.id = r.user_id AND r.title LIKE ?)
@@ -125,6 +132,7 @@ def edit_message(message_id):
     if request.method == "POST":
         check_csrf()
         content = request.form["content"]
+        check_length(content, 1, 1000)
         sql = "UPDATE messages SET content = ? WHERE id = ?"
         db.execute(sql, [content, message_id])
         sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
@@ -174,6 +182,8 @@ def edit_review(review_id):
         check_csrf()
         title = request.form["title"]
         content = request.form["content"]
+        check_length(title, 1, 100)
+        check_length(content, 1, 10000)
         sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
         db.execute(sql, [title, content, review_id])
         return redirect("/review/" + str(review_id))
@@ -209,6 +219,9 @@ def new_review():
         title = request.form["title"]
         content = request.form["content"]
         tags = request.form["tags"]
+        check_length(title, 1, 100)
+        check_length(content, 1, 10000)
+        check_length(tags, 1, 100)
         sql = "INSERT INTO reviews (title, content, user_id) VALUES (?, ?, ?)"
         db.execute(sql, [title, content, session["user_id"]])
         review_id = db.last_insert_id()
@@ -266,6 +279,8 @@ def create():
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
+    check_length(username, 4, 20)
+    check_length(password1, 8, 20)
 
     if password1 != password2:
         return "Passwords do not match"
@@ -285,6 +300,7 @@ def new_message():
     check_csrf()
     content = request.form["content"]
     review_id = request.form["review_id"]
+    check_length(content, 1, 500)
     sql = "INSERT INTO messages (content, time, user_id, review_id) VALUES (?, datetime('now'), ?, ?)"
     db.execute(sql, [content, session["user_id"], review_id])
     return redirect("/review/" + str(review_id))

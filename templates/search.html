@@ -6,9 +6,9 @@
     <p>
       Searchterm:
       {% if query %}
-      <input type="text" name="query" value="{{ query }}" />
+      <input type="text" name="query" value="{{ query }}" maxlength="100" minlength="3" required />
       {% else %}
-      <input type="text" name="query" />
+      <input type="text" name="query" maxlength="100" minlength="3" required/>
       {% endif %}
     </p>
     <input type="submit" value="Search" />

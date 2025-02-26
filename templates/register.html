@@ -5,15 +5,15 @@
 <form action="/create" method="post">
   <p>
     Username: <br />
-    <input type="text" name="username" />
+    <input type="text" name="username" minlength="4" maxlength="20" required />
   </p>
   <p>
     Password: <br />
-    <input type="password" name="password1" />
+    <input type="password" name="password1" minlength="8" maxlength="20" required />
   </p>
   <p>
     Repeat Password: <br />
-    <input type="password" name="password2" />
+    <input type="password" name="password2" minlength="8" maxlength="20" required />
   </p>
   <input type="submit" value="Create account" />
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />

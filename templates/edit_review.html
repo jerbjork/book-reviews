@@ -6,11 +6,11 @@
   Edit review:
   <p>
     Book title<br />
-    <input type="text" name="title" value="{{ review.title }}" />
+    <input type="text" name="title" value="{{ review.title }}" maxlength="100" required />
   </p>
   <p>
     Review<br />
-    <textarea name="content" rows="5" cols="40"> {{ review.content }}</textarea>
+    <textarea name="content" rows="10" cols="80" maxlength="10000" required> {{ review.content }}</textarea>
   </p>
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Submit" />

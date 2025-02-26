@@ -4,9 +4,8 @@
 {% block content %}
 {% if review.removed == 0 %}
   <h1>{{ review.title }}</h1>
-  <p>
-    {{review.content}}
-  </p>
+  <div class="content">{{review.content}}</div>
+    
   <a href="/user/{{ review.user_id }}">Submitted by: {{ user.username }}</a>
   <p>
     Tags:
@@ -27,9 +26,10 @@
   <form action="/new_message" method="post">
     <p>
       Leave reply:<br />
-      <textarea name="content" rows="5" cols="40"></textarea>
+      <textarea name="content" rows="5" cols="40" maxlength="500" required ></textarea>
     </p>
     <input type="hidden" name="review_id" value="{{ review.id }}" />
+    <input type="hidden" name="csrf_token" value="{{session.csrf_token}}"/>
     <input type="submit" value="Send" />
   </form>
   {% endif %}

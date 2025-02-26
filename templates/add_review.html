@@ -6,15 +6,15 @@
   Leave a review:
   <p>
     Book title<br />
-    <input type="text" name="title" />
+    <input type="text" name="title" maxlength="100" required />
   </p>
   <p>
     Review<br />
-    <textarea name="content" rows="5" cols="40"></textarea>
+    <textarea name="content" rows="10" cols="80" maxlength="15000" required></textarea>
   </p>
   <p>
     Tags (multiple are seperated with ", ")<br />
-    <input type="text" name="tags" />
+    <input type="text" name="tags" maxlength="100" />
   </p>
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Submit" />

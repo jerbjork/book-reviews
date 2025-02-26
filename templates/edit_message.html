@@ -5,7 +5,7 @@
 <form action="/edit_message/{{ message.id }}" method="post">
   <p>
     Message:<br />
-    <textarea name="content" rows="5" cols="40">{{ message.content }}</textarea>
+    <textarea name="content" rows="10" cols="80" maxlength="500" required >{{ message.content }}</textarea>
   </p>
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Update" />
