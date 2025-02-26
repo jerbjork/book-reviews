@@ -1,32 +1,20 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}Register{% endblock %}
 
-<head>
-  <title>Register</title>
-</head>
-
-<body>
-  <form action="/create" method="post">
-    <p>
-      Username: <br />
-      <input type="text" name="username" />
-    </p>
-    <p>
-      Password: <br />
-      <input type="password" name="password1" />
-    </p>
-    <p>
-      Repeat Password: <br />
-      <input type="password" name="password2" />
-    </p>
-    <input type="submit" value="Create account" />
-  </form>
-
-  <hr />
-
+{% block content %}
+<form action="/create" method="post">
   <p>
-    <a href="/">Return to front page</a>
+    Username: <br />
+    <input type="text" name="username" />
   </p>
-
-</body>
-</html>
+  <p>
+    Password: <br />
+    <input type="password" name="password1" />
+  </p>
+  <p>
+    Repeat Password: <br />
+    <input type="password" name="password2" />
+  </p>
+  <input type="submit" value="Create account" />
+</form>
+{% endblock %}

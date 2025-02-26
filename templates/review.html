@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}{{ review.title }}{% endblock %}
 
-<head>
-  <title>{{ review.title }}</title>
-</head>
-
-<body>
-
+{% block content %}
 {% if review.removed == 0 %}
   <h1>{{ review.title }}</h1>
   <p>
@@ -28,47 +23,40 @@
   {% endif %}
   <hr />
 
-    {% if session.user_id %}
-    <form action="/new_message" method="post">
-      <p>
-        Leave reply:<br />
-        <textarea name="content" rows="5" cols="40"></textarea>
-      </p>
-      <input type="hidden" name="review_id" value="{{ review.id }}" />
-      <input type="submit" value="Send" />
-    </form>
-    {% endif %}
-
-  {% else %}
-    <h1>This post has been removed by user</h1>
-
-    {% if review.user_id == session.user_id %}
-      <p>
-        <a href="/edit_review/{{ review.id }}">Restore post</a>
-      </p>
-    {% endif %}
+  {% if session.user_id %}
+  <form action="/new_message" method="post">
+    <p>
+      Leave reply:<br />
+      <textarea name="content" rows="5" cols="40"></textarea>
+    </p>
+    <input type="hidden" name="review_id" value="{{ review.id }}" />
+    <input type="submit" value="Send" />
+  </form>
   {% endif %}
 
-  {% for message in messages %}
-    <p>
-      Posted {{ message.time }} by user <a href="/user/{{ message.user_id }}">{{ message.username }}</a>:
-    </p>
-    <p>
-      {{ message.content }}
-    </p>
+{% else %}
+  <h1>This post has been removed by user</h1>
 
-    {% if message.username == session.username %}
+  {% if review.user_id == session.user_id %}
     <p>
-      <a href="/edit_message/{{ message.id }}">Edit</a> |
-      <a href="/remove_message/{{ message.id }}">Delete</a>
+      <a href="/edit_review/{{ review.id }}">Restore post</a>
     </p>
-    {% endif %}
-  {% endfor %}
+  {% endif %}
+{% endif %}
 
-  <hr />
+{% for message in messages %}
   <p>
-    <a href="/">Return to front page</a>
+    Posted {{ message.time }} by user <a href="/user/{{ message.user_id }}">{{ message.username }}</a>:
   </p>
-  
-</body>
-</html>
+  <p>
+    {{ message.content }}
+  </p>
+
+  {% if message.username == session.username %}
+  <p>
+    <a href="/edit_message/{{ message.id }}">Edit</a> |
+    <a href="/remove_message/{{ message.id }}">Delete</a>
+  </p>
+  {% endif %}
+{% endfor %}
+{% endblock %}

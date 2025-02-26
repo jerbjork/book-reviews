@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}Search{% endblock %}
 
-<head>
-  <title>{{ search }}</title>
-</head>
-
-<body>
-
+{% block content %}
   <form action="/search" method="post">
     <p>
       Searchterm:
@@ -36,13 +31,4 @@
   <p>No results found</p>
   {% endif %}
   {% endif %}
-
-  <hr />
-
-  <p>
-    <a href="/">Return to front page</a>
-  </p>
-  
-</body>
-
-</html>
+{% endblock %}

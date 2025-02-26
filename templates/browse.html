@@ -1,25 +1,11 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}Categories{% endblock %}
 
-<head>
-  <title>{{ Categories }}</title>
-</head>
-
-<body>
-  <h1>{{ Categories }}</h1>
-
-  {% for tag in tags %}
-
-  <p>
-    <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
-  </p>
+{% block content %}
+{% for tag in tags %}
+<p>
+  <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
+</p>
 
 {% endfor %}
-
-  <hr />
-  <p>
-    <a href="/">Return to front page</a>
-  </p>
-</body>
-
-</html>
+{% endblock %}

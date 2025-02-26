@@ -1,34 +1,21 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}Loign{% endblock %}
 
-<head>
-  <title>Login</title>
-</head>
-
-<body>
-
-  <form action="/add_review" method="post">
-    Leave a review:
-    <p>
-      Book title<br />
-      <input type="text" name="title" />
-    </p>
-    <p>
-      Review<br />
-      <textarea name="content" rows="5" cols="40"></textarea>
-    </p>
-    <p>
-      Tags (multiple are seperated with ", ")<br />
-      <input type="text" name="tags" />
-    </p>
-    <input type="submit" value="Submit" />
-  </form>
-
-  <hr />
-  
+{% block content %}
+<form action="/add_review" method="post">
+  Leave a review:
   <p>
-    <a href="/">Return to front page</a>
+    Book title<br />
+    <input type="text" name="title" />
   </p>
-
-</body>
-</html>
+  <p>
+    Review<br />
+    <textarea name="content" rows="5" cols="40"></textarea>
+  </p>
+  <p>
+    Tags (multiple are seperated with ", ")<br />
+    <input type="text" name="tags" />
+  </p>
+  <input type="submit" value="Submit" />
+</form>
+{% endblock %}

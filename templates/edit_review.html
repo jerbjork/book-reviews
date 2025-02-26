@@ -1,12 +1,7 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}Edit review{% endblock %}
 
-<head>
-  <title>edit</title>
-</head>
-
-<body>
-
+{% block content %}
 <form action="/edit_review/{{ review.id }}" method="post">
   Edit review:
   <p>
@@ -19,6 +14,4 @@
   </p>
   <input type="submit" value="Submit" />
 </form>
-
-</body>
-</html>
+{% endblock %}

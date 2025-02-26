@@ -1,25 +1,12 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block title %}Edit message{% endblock %}
 
-<head>
-  <title>Edit message</title>
-</head>
-
-<Body>
-
-  <form action="/edit_message/{{ message.id }}" method="post">
-    <p>
-      Message:<br />
-      <textarea name="content" rows="5" cols="40">{{ message.content }}</textarea>
-    </p>
-    <input type="submit" value="Update" />
-  </form>
-
-  <hr />
-  
+{% block content %}
+<form action="/edit_message/{{ message.id }}" method="post">
   <p>
-    <a href="/">Return to front page</a>
+    Message:<br />
+    <textarea name="content" rows="5" cols="40">{{ message.content }}</textarea>
   </p>
-
-</Body>
-</html>
+  <input type="submit" value="Update" />
+</form>
+{% endblock %}

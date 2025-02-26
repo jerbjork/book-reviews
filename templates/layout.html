@@ -20,6 +20,7 @@
         <li><a href="/register">Create new account</a></li>
         {% if session.user_id %}
         <li><a href="/add_review"> Sumbit a new review</a></li>
+        <li><a href="/user/{{session.user_id}}"> User page</a></li>
         <li><a href="/logout">Log out</a></li>
         {% else %}
         <li><a href="/login">Log in</a></li>
