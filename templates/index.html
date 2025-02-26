@@ -1,47 +1,7 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
 
-<head>
-  <title>Login</title>
-</head>
+{% block title %}Book reviews{% endblock %}
 
-<body>
-  <a href="search">search</a>
-  {% if session.username %}
-  <p>
-    Signed in as <a href="/user/{{session.user_id}}">{{ session.username }}
-  </p>
-  <p>
-    <a href="/logout">Logout</a>
-  </p>
-  <p>
-    <a href="/browse">Browse by tag</a>
-  </p>
+{% block content %}
 
-  <p>
-  <a href="/add_review"> Sumbit a new review</a>
-  </p>
-
-  {% else %}
-  <p>
-    <a href="/browse">Browse by tag</a>
-  </p>
-  <p>
-    <a href="/register">Create new account</a>
-  </p>
-
-  <form action="/login" method="post">
-    <p>
-      Username: <br />
-      <input type="text" name="username" />
-    </p>
-    <p>
-      Password: <br />
-      <input type="password" name="password" />
-    </p>
-    <input type="submit" value="Log in" />
-  </form>
-  {% endif %}
-
-</body>
-</html>
+{% endblock %}

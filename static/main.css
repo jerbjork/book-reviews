@@ -1,0 +1,41 @@
+header {
+    background-color: black;
+    color: red;
+    padding: 1em;
+    margin: 0.5em 0;
+  }
+  
+  .nav {
+    background-color: lightgrey;
+    padding: 0.5em;
+    margin: 0.5em 0;
+  }
+  
+  .content {
+    background-color: white;
+    padding: 1em;
+    margin: 0.5em 0;
+  }
+
+nav {
+    text-align: center;
+  }
+  
+  nav ul {
+    padding: 0;
+    margin: 0;
+  }
+  
+  nav li {
+    display: inline-block;
+    padding: 0 1em;
+    margin: 0;
+  }
+  
+  nav li:not(:last-of-type) {
+    border-right: 1px solid black;
+  }
+
+nav li:not(:first-of-type) {
+    margin-left: -0.25em;
+  } 

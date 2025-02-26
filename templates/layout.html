@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/main.css">
+</head>
+
+<body>
+  <div class="header">
+    <h1></h1>
+  </div>
+
+  <div class="nav">
+    <nav>
+      <ul>
+        <li><a href="/">Front page</a></li>
+        <li><a href="/search">Search by term</a></li>
+        <li><a href="/browse">Search by tag</a></li>
+        <li><a href="/register">Create new account</a></li>
+        {% if session.user_id %}
+        <li><a href="/add_review"> Sumbit a new review</a></li>
+        <li><a href="/logout">Log out</a></li>
+        {% else %}
+        <li><a href="/login">Log in</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+
+</html>
