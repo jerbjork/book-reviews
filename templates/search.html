@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{{ search }}</title>
+</head>
+
+<body>
+
+  <form action="/search" method="post">
+    <p>
+      Searchterm:
+      {% if query %}
+      <input type="text" name="query" value="{{ query }}" />
+      {% else %}
+      <input type="text" name="query" />
+      {% endif %}
+    </p>
+    <input type="submit" value="Search" />
+  </form>
+
+  {% if query %}
+  {% if results %}
+  {% for result in results %}
+    {% if result.removed == 0 %}
+      <p>
+      <a href="/review/{{ result.id }}">{{ result.title }}</a> submitted by  <a href="/user/{{ result.user_id }}">{{ result.username }}</a>
+      </p>
+    {% else %}
+      <p>
+        <a href="/review/{{ result.id }}">Removed</a> submitted by  {{ result.username }}
+      </p>
+    {% endif %}
+  {% endfor %}
+  {% else %}
+  <p>No results found</p>
+  {% endif %}
+  {% endif %}
+
+  <hr />
+
+  <p>
+    <a href="/">Return to front page</a>
+  </p>
+  
+</body>
+
+</html>

@@ -14,6 +14,21 @@ def index():
 def register():
     return render_template("register.html")
 
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    if request.method == "GET":
+        return render_template("search.html")
+    
+    if request.method == "POST":
+        query = request.form["query"]
+        sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
+                FROM users u, reviews r
+                WHERE (u.id = r.user_id AND r.title LIKE ?)
+                OR (u.id = r.user_id AND u.username LIKE ?)"""
+        results = db.query(sql, ["%" + query + "%", "%" + query + "%"])
+        return render_template("search.html", query=query, results=results)
+
 @app.route("/login", methods=["POST"])
 def login():
     username = request.form["username"]
