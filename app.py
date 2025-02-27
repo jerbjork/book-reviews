@@ -1,6 +1,6 @@
 import sqlite3
 import secrets
-from flask import Flask, redirect, render_template, request, session, abort, make_response
+from flask import Flask, redirect, render_template, request, session, abort, make_response, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
@@ -10,8 +10,10 @@ app.secret_key = config.secret_key
 def check_length(text, lower_limit, upper_limit):
         if len(text) < lower_limit:
             abort(411)
+            redirect(request.url)
         if len(text) > upper_limit:
             abort(413)
+            redirect(request.url)
 
 def check_csrf():
     if request.form["csrf_token"] != session["csrf_token"]:
@@ -57,9 +59,10 @@ def login():
                 session["username"] = username
                 session["user_id"] = password_hash[0][0]
                 session["csrf_token"] = secrets.token_hex(16)
+                flash("Log in successfull")
                 return redirect("/")
-            
-        return "Incorrect username or password"
+        flash("Incorrect username or password")
+        return redirect("/login")
 
 @app.route("/logout")
 def logout():
@@ -67,6 +70,7 @@ def logout():
         del session["username"]
         del session["user_id"]
         del session["csrf_token"]
+        flash("Logged out successfully")
     return redirect("/")
 
 @app.route("/user/<int:user_id>", methods=["GET"])
@@ -94,14 +98,17 @@ def add_image():
         check_csrf()
         file = request.files["image"]
         if not file.filename.endswith((".jpg", ".jpeg", ".png")):
-            return "Incorrect file fromat"
+            flash("Incorrect file format")
+            return redirect("/add_image")
         
         image = file.read()
         if len(image) > 1000 * 1024:
-            return "Filesize exceeds 1 MB"
+            flash("Filesize exceeds 1 MB")
+            return redirect("/add_image")
         
         sql = "UPDATE users SET image = ? WHERE id = ?"
         db.execute(sql, [image, session["user_id"]])
+        flash("Profile picture updated")
         return redirect("/user/" + str(session["user_id"]))
     
 @app.route("/image/<int:user_id>")
@@ -137,6 +144,7 @@ def edit_message(message_id):
         db.execute(sql, [content, message_id])
         sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
         review_id = db.query(sql, [message_id])[0][0]
+        flash("Comment updated")
         return redirect("/review/" + str(review_id))
     
 @app.route("/remove_message/<int:message_id>", methods=["GET", "POST"])
@@ -160,6 +168,7 @@ def remove_message(message_id):
                 sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
                 review_id = db.query(sql, [message_id])[0][0]
                 sql = "DELETE FROM messages WHERE id = ?"
+                flash("Comment deleted")
                 db.execute(sql, [message_id])
 
         return redirect("/review/" + str(review_id))
@@ -186,6 +195,7 @@ def edit_review(review_id):
         check_length(content, 1, 10000)
         sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
         db.execute(sql, [title, content, review_id])
+        flash("Review updated")
         return redirect("/review/" + str(review_id))
     
 @app.route("/remove_review/<int:review_id>", methods=["GET", "POST"])
@@ -206,7 +216,7 @@ def remove_review(review_id):
         if "continue" in request.form:
             sql = "UPDATE reviews SET removed = ? WHERE id = ?"
             db.execute(sql, [1, review_id])
-
+        flash("Review removed")
         return redirect("/review/" + str(review_id))
 
 @app.route("/add_review", methods=["GET", "POST"])
@@ -240,6 +250,7 @@ def new_review():
             sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
             db.execute(sql, [tag_id, review_id])
 
+        flash("Review added")
         return redirect("/review/" + str(review_id))
 
 @app.route("/review/<int:review_id>")
@@ -291,9 +302,11 @@ def create():
         db.execute(sql, [username, password_hash])
 
     except sqlite3.IntegrityError:
-        return "Username is already taken"
+        flash("Username is already taken")
+        return redirect(request.url)
     
-    return "Account created"
+    flash("Account created")
+    return redirect("/")
 
 @app.route("/new_message", methods=["POST"])
 def new_message():
@@ -303,4 +316,5 @@ def new_message():
     check_length(content, 1, 500)
     sql = "INSERT INTO messages (content, time, user_id, review_id) VALUES (?, datetime('now'), ?, ?)"
     db.execute(sql, [content, session["user_id"], review_id])
+    flash("Comment posted")
     return redirect("/review/" + str(review_id))

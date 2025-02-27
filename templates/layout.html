@@ -28,6 +28,12 @@
       </ul>
     </nav>
   </div>
+  
+  {% for message in get_flashed_messages() %}
+  <p>
+    <b>{{ message }}</b>
+  </p>
+  {% endfor %}
 
   <div class="content">
     {% block content %}{% endblock %}
