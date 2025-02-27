@@ -21,7 +21,13 @@ def check_csrf():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    sql = """SELECT u.username, r.id, r.title
+             FROM users u, reviews r
+             WHERE u.id = r.user_id 
+             ORDER BY r.id DESC
+             LIMIT 20"""
+    reviews = (db.query(sql, []))
+    return render_template("index.html", reviews=reviews)
 
 @app.route("/register")
 def register():
@@ -246,8 +252,9 @@ def new_review():
                 tag_id = db.last_insert_id()
 
             else:
-                tag_id = tag_id[0]
+                tag_id = tag_id[0][0]
             sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
+            print(tag_id, review_id)
             db.execute(sql, [tag_id, review_id])
 
         flash("Review added")

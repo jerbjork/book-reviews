@@ -1,4 +1,10 @@
 {% extends "layout.html" %}
 {% block title %}Book reviews{% endblock %}
 {% block content %}
+
+{% for review in reviews %}
+    <p>
+    <a href="/review/{{ review.id }}">{{ review.title }}</a> submitted by  <a href="/user/{{ review.user_id }}">{{ review.username }} {{ review.time }}</a>
+    </p>
+{% endfor %}
 {% endblock %}
