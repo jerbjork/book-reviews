@@ -3,10 +3,12 @@
 
 {% block content %}
 {% if review.removed == 0 %}
-  <h1>{{ review.title }}</h1>
+  <h2>{{ review.title }}</h2>
+  <p> 
+    Submitted {{ review.time }} by <a href="/user/{{ review.user_id }}"> {{ user.username }}</a> 
+  </p>
+
   <div class="content">{{review.content}}</div>
-    
-  <a href="/user/{{ review.user_id }}">Submitted by: {{ user.username }}</a>
   <p>
     Tags:
     {% for tag in tags %}

@@ -21,9 +21,9 @@ def check_csrf():
 
 @app.route("/")
 def index():
-    sql = """SELECT u.username, r.id, r.title
+    sql = """SELECT u.username, r.id, r.title, r.time, r.user_id
              FROM users u, reviews r
-             WHERE u.id = r.user_id 
+             WHERE u.id = r.user_id AND r.removed = 0
              ORDER BY r.id DESC
              LIMIT 20"""
     reviews = (db.query(sql, []))
@@ -238,7 +238,7 @@ def new_review():
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
         check_length(tags, 1, 100)
-        sql = "INSERT INTO reviews (title, content, user_id) VALUES (?, ?, ?)"
+        sql = "INSERT INTO reviews (title, content, user_id, time) VALUES (?, ?, ?, datetime('now'))"
         db.execute(sql, [title, content, session["user_id"]])
         review_id = db.last_insert_id()
 

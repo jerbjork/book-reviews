@@ -4,7 +4,11 @@
 
 {% for review in reviews %}
     <p>
-    <a href="/review/{{ review.id }}">{{ review.title }}</a> submitted by  <a href="/user/{{ review.user_id }}">{{ review.username }} {{ review.time }}</a>
+    <a href="/review/{{ review.id }}">{{ review.title }}</a> submitted {{ review.time }} by <a href="/user/{{ review.user_id }}"> {{ review.username }}</a>
     </p>
+
+    <p> 
+         
+      </p>
 {% endfor %}
 {% endblock %}
