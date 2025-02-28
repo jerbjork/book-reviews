@@ -6,10 +6,15 @@
     <p>
       Searchterm:
       {% if query %}
+      {% if search == "tag" %}
+      <input type="text" name="query" maxlength="100" minlength="3" required />
+      {% else %}
       <input type="text" name="query" value="{{ query }}" maxlength="100" minlength="3" required />
+      {% endif %}
       {% else %}
       <input type="text" name="query" maxlength="100" minlength="3" required/>
       {% endif %}
+      <input type="hidden" name="search" value="search">
     </p>
     <input type="submit" value="Search" />
   </form>
@@ -31,4 +36,16 @@
   <p>No results found</p>
   {% endif %}
   {% endif %}
+
+  <hr> 
+  <p> Browse tags </p>
+  {% for tag in tags %}
+  <form action="/search" method="post">
+    <p>
+    <input type="hidden" name="query" value="{{ tag.title }}">
+    <input type="submit" value="{{ tag.title }}" />
+    <input type="hidden" name="search" value="tag">
+    </p>
+  </form>
+  {% endfor %}
 {% endblock %}

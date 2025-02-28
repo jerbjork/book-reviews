@@ -36,18 +36,26 @@ def register():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
+    sql = "SELECT title FROM tags"
+    tags = db.query(sql)
     if request.method == "GET":
-        return render_template("search.html")
+        return render_template("search.html", tags=tags)
     
     if request.method == "POST":
         query = request.form["query"]
         check_length(query, 3, 100)
-        sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
-                FROM users u, reviews r
-                WHERE (u.id = r.user_id AND r.title LIKE ?)
-                OR (u.id = r.user_id AND u.username LIKE ?)"""
-        results = db.query(sql, ["%" + query + "%", "%" + query + "%"])
-        return render_template("search.html", query=query, results=results)
+        if request.form["search"] == "tag":
+            sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
+                  FROM users u, reviews r, tags t, attach a 
+                  WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
+            results = (db.query(sql, [query]))
+        else:
+            sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
+                    FROM users u, reviews r
+                    WHERE (u.id = r.user_id AND r.title LIKE ?)
+                    OR (u.id = r.user_id AND u.username LIKE ?)"""
+            results = db.query(sql, ["%" + query + "%", "%" + query + "%"])
+        return render_template("search.html", query=query, results=results, tags=tags, search=request.form["search"])
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -222,10 +230,12 @@ def edit_review(review_id):
         check_length(tags, 0, 100)
         check_length(content, 1, 10000)
         remove_tags(review_id)
-        add_tags(tags, review_id)
-        sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
-        db.execute(sql, [title, content, review_id])
-        flash("Review updated")
+        if add_tags(tags, review_id):
+            sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
+            db.execute(sql, [title, content, review_id])
+            flash("Review updated")
+        else:
+            flash("Tags are too short or in incrrect format")
         return redirect("/review/" + str(review_id))
 
 @app.route("/remove_review/<int:review_id>", methods=["GET", "POST"])
@@ -252,6 +262,8 @@ def remove_review(review_id):
 def add_tags(tags, review_id):
     if tags:
         for tag in tags.split(", "):
+            if len(tag) < 3:
+                return False
             tag.lower()
             sql = "SELECT id FROM tags WHERE title = ?"
             tag_id = (db.query(sql, [tag]))
@@ -266,6 +278,7 @@ def add_tags(tags, review_id):
 
             sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
             db.execute(sql, [tag_id, review_id])
+    return True
 
 @app.route("/add_review", methods=["GET", "POST"])
 def new_review():
@@ -308,12 +321,6 @@ def show_review(review_id):
     user = db.query(sql, [review_id])[0]
     return render_template("review.html", review=review, tags=tags, messages=messages, user=user)
     
-@app.route("/browse")
-def browse():
-    sql = "SELECT title FROM tags"
-    tags = db.query(sql)
-    return render_template("browse.html", tags=tags)
-
 @app.route("/tags/<string:tag>")
 def show_tags(tag):
     sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 

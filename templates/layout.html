@@ -15,8 +15,7 @@
     <nav>
       <ul>
         <li><a href="/">Front page</a></li>
-        <li><a href="/search">Search by term</a></li>
-        <li><a href="/browse">Search by tag</a></li>
+        <li><a href="/search">Search for review</a></li>
         <li><a href="/register">Create new account</a></li>
         {% if session.user_id %}
         <li><a href="/add_review"> Sumbit a new review</a></li>
@@ -28,7 +27,7 @@
       </ul>
     </nav>
   </div>
-  
+
   {% for message in get_flashed_messages() %}
   <p>
     <b>{{ message }}</b>

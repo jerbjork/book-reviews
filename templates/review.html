@@ -13,7 +13,11 @@
   <p>
     Tags:
     {% for tag in tags %}
-      <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
+    <form action="/search" method="post">
+      <input type="hidden" name="query" value="{{ tag.title }}">
+      <input type="submit" value="{{ tag.title }}" />
+      <input type="hidden" name="search" value="tag">
+    </form>
     {% endfor %}
   </p>
   {% else %}
