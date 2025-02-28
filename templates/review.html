@@ -9,12 +9,16 @@
   </p>
 
   <div class="content">{{review.content}}</div>
+  {% if tags %}
   <p>
     Tags:
     {% for tag in tags %}
       <a href="/tags/{{ tag.title }}">{{ tag.title }}</a>
     {% endfor %}
   </p>
+  {% else %}
+  <p>No tags</p>
+  {% endif %}
   
   {% if review.user_id == session.user_id %}
     <p>

@@ -174,11 +174,29 @@ def remove_message(message_id):
                 sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
                 review_id = db.query(sql, [message_id])[0][0]
                 sql = "DELETE FROM messages WHERE id = ?"
-                flash("Comment deleted")
                 db.execute(sql, [message_id])
+                flash("Comment deleted")
 
         return redirect("/review/" + str(review_id))
+
+def tags_to_string(tags):
+    result = ""
+    for tag in tags:
+        result += tag[0] + ", "
+    return result[:-2]
+
+def get_tags(review_id):
+    sql = "SELECT tags.title FROM tags, reviews, attach WHERE tags.id = attach.tag_id AND attach.review_id = reviews.id AND reviews.id = ?"
+    return db.query(sql, [review_id])
     
+def remove_tags(review_id):
+    sql = "SELECT attach.id FROM attach, reviews WHERE attach.review_id = reviews.id AND reviews.id = ?"
+    ids = db.query(sql, [review_id])
+    if ids:
+        for id in ids:
+            sql = "DELETE FROM attach WHERE id = ?"
+            db.execute(sql, [id[0]])
+            
 @app.route("/edit_review/<int:review_id>", methods=["GET", "POST"])
 def edit_review(review_id):
     sql = "SELECT * FROM reviews WHERE id = ?"
@@ -190,20 +208,26 @@ def edit_review(review_id):
     if review["user_id"] != session["user_id"]:
         abort(403)
 
+    tags = tags_to_string(get_tags(review_id))
     if request.method == "GET":
-        return render_template("edit_review.html", review=review)
+        
+        return render_template("edit_review.html", review=review, tags=tags)
 
     if request.method == "POST":
         check_csrf()
         title = request.form["title"]
         content = request.form["content"]
+        tags = request.form["tags"]
         check_length(title, 1, 100)
+        check_length(tags, 0, 100)
         check_length(content, 1, 10000)
+        remove_tags(review_id)
+        add_tags(tags, review_id)
         sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
         db.execute(sql, [title, content, review_id])
         flash("Review updated")
         return redirect("/review/" + str(review_id))
-    
+
 @app.route("/remove_review/<int:review_id>", methods=["GET", "POST"])
 def remove_review(review_id):
     sql = "SELECT * FROM reviews WHERE id = ?"
@@ -224,9 +248,30 @@ def remove_review(review_id):
             db.execute(sql, [1, review_id])
         flash("Review removed")
         return redirect("/review/" + str(review_id))
+    
+def add_tags(tags, review_id):
+    if tags:
+        for tag in tags.split(", "):
+            tag.lower()
+            sql = "SELECT id FROM tags WHERE title = ?"
+            tag_id = (db.query(sql, [tag]))
+
+            if not tag_id:
+                sql = "INSERT INTO tags (title) VALUES (?)"
+                db.execute(sql, [tag])
+                tag_id = db.last_insert_id()
+
+            else:
+                tag_id = tag_id[0][0]
+
+            sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
+            db.execute(sql, [tag_id, review_id])
 
 @app.route("/add_review", methods=["GET", "POST"])
 def new_review():
+    if not session["user_id"]:
+        abort(403)
+
     if request.method == "GET":
         return render_template("add_review.html")
     
@@ -237,26 +282,11 @@ def new_review():
         tags = request.form["tags"]
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
-        check_length(tags, 1, 100)
+        check_length(tags, 0, 100)
         sql = "INSERT INTO reviews (title, content, user_id, time) VALUES (?, ?, ?, datetime('now'))"
         db.execute(sql, [title, content, session["user_id"]])
         review_id = db.last_insert_id()
-
-        for tag in tags.split(", "):
-            tag.lower()
-            sql = "SELECT id FROM tags WHERE title = ?"
-            tag_id = (db.query(sql, [tag]))
-            if not tag_id:
-                sql = "INSERT INTO tags (title) VALUES (?)"
-                db.execute(sql, [tag])
-                tag_id = db.last_insert_id()
-
-            else:
-                tag_id = tag_id[0][0]
-            sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
-            print(tag_id, review_id)
-            db.execute(sql, [tag_id, review_id])
-
+        add_tags(tags, review_id)
         flash("Review added")
         return redirect("/review/" + str(review_id))
 

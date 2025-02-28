@@ -10,7 +10,11 @@
   </p>
   <p>
     Review<br />
-    <textarea name="content" rows="10" cols="80" maxlength="10000" required> {{ review.content }}</textarea>
+    <textarea name="content" rows="10" cols="80" maxlength="10000" required>{{ review.content }}</textarea>
+  </p>
+  <p>
+    Tags (multiple are seperated with ", ")<br />
+    <input type="text" name="tags" value="{{ tags }}" maxlength="100"/>
   </p>
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Submit" />

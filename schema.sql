@@ -29,6 +29,8 @@ CREATE TABLE messages (
 );
 
 CREATE TABLE attach (
-    tag_id INTEGER REFERENCES tags,
-    review_id INTEGER REFERENCES reviews
+    id INTEGER PRIMARY KEY,
+    tag_id INTEGER REFERENCES tags ON DELETE CASCADE,
+    review_id INTEGER REFERENCES reviews ON DELETE CASCADE,
+    UNIQUE (tag_id, review_id)
 );

@@ -32,16 +32,10 @@ INSERT INTO attach (tag_id, review_id) VALUES ("8", "3");
 INSERT INTO attach (tag_id, review_id) VALUES ("3", "3");
 INSERT INTO attach (tag_id, review_id) VALUES ("9", "4");
 INSERT INTO attach (tag_id, review_id) VALUES ("10", "4");
-INSERT INTO attach (tag_id, review_id) VALUES ("11", "4");
-INSERT INTO attach (tag_id, review_id) VALUES ("12", "4");
-INSERT INTO attach (tag_id, review_id) VALUES ("13", "4");
 INSERT INTO attach (tag_id, review_id) VALUES ("1", "5");
-INSERT INTO attach (tag_id, review_id) VALUES ("14", "5");
 INSERT INTO attach (tag_id, review_id) VALUES ("5", "5");
 INSERT INTO attach (tag_id, review_id) VALUES ("1", "6");
 INSERT INTO attach (tag_id, review_id) VALUES ("5", "6");
-INSERT INTO attach (tag_id, review_id) VALUES ("15", "6");
-INSERT INTO attach (tag_id, review_id) VALUES ("12", "6");
 
 INSERT INTO messages (time, content, user_id, review_id) VALUES ("2025-02-02 21:20:35", "Some sample text to show what a comments looks like", "1", "1");
 INSERT INTO messages (time, content, user_id, review_id) VALUES ("2025-02-02 21:20:36", "Some sample text to show what a comments looks like", "1", "1");
