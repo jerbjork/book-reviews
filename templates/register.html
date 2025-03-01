@@ -2,10 +2,13 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
+{% if session.username %}
+<h3> You are already logged in</h3>
+{% else %}
 <form action="/create" method="post">
   <p>
     Username: <br />
-    <input type="text" name="username" minlength="4" maxlength="20" required />
+    <input type="text" name="username" minlength="4" maxlength="20" value="{{ filled.username }}" required />
   </p>
   <p>
     Password: <br />
@@ -18,4 +21,5 @@
   <input type="submit" value="Create account" />
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
 </form>
+{% endif %}
 {% endblock %}

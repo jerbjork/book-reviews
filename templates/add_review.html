@@ -6,11 +6,11 @@
   Leave a review:
   <p>
     Book title<br />
-    <input type="text" name="title" maxlength="100" required />
+    <input type="text" name="title" maxlength="100" value="{{ filled.title }}" required />
   </p>
   <p>
     Review<br />
-    <textarea name="content" rows="10" cols="80" maxlength="15000" required></textarea>
+    <textarea name="content" rows="10" cols="80" maxlength="15000" required>{{ filled.content }}</textarea>
   </p>
   <p>
     <p>Choose categories:</p>

@@ -23,12 +23,12 @@
 {% if not reviews %}
   <p> No reviews found</p>
 {% else %}
-  <p> Reviews posted by {{ user.username}}:</p>
+  <p> Reviews by {{ user.username}}:</p>
 
 {% for review in reviews %}
   {% if review.removed == 0 %}
     <p>
-    <a href="/review/{{ review.id }}">{{ review.title }}</a>
+    <a href="/review/{{ review.id }}">{{ review.title }}</a> posted {{review.time}}
   {% else %}
     <a href="/review/{{ review.id }}">Removed</a>
     </p>

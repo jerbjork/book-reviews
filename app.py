@@ -9,7 +9,7 @@ from messages import get_message, update_message, delete_message, get_review_id,
 from reviews import latest_reviews, search_reviews, get_user_reviews, get_review_data, update_review, set_review_removed, add_review
 from categories import get_categories, get_review_categories, get_selected_categories, attach_categories, detach_categories
 from users import get_password_hash, get_user_data, add_profile_picture, get_image
-from validations import check_length, check_csrf
+from validations import check_length, check_csrf, check_login
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -21,7 +21,7 @@ def index():
 
 @app.route("/register")
 def register():
-    return render_template("register.html")
+    return render_template("register.html", filled={})
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
@@ -40,7 +40,7 @@ def search():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        return render_template("login.html")
+        return render_template("login.html", filled={})
 
     if request.method == "POST":
         username = request.form["username"]
@@ -55,7 +55,8 @@ def login():
                 return redirect("/")
             
         flash("Incorrect username or password")
-        return redirect("/login")
+        filled = {"username": username}
+        return render_template("/login.html", filled=filled)
 
 @app.route("/logout")
 def logout():
@@ -74,8 +75,7 @@ def show_user(user_id):
 
 @app.route("/add_image", methods=["GET", "POST"])
 def add_image():
-    if not session["user_id"]:
-        abort(403)
+    check_login()
 
     if request.method == "GET":
         return render_template("add_image.html")
@@ -147,20 +147,23 @@ def edit_review(review_id):
     if review["user_id"] != session["user_id"]:
         abort(403)
 
+    categories = get_selected_categories(review_id)
     if request.method == "GET":
-        categories = get_selected_categories(review_id)
         return render_template("edit_review.html", review=review, categories=categories)
 
     if request.method == "POST":
         check_csrf()
         title = request.form["title"]
         content = request.form["content"]
-        categories = request.form.getlist("categories")
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
+        if update_review(title, content, review_id):
+            flash("You have already posted a review with that title")
+            return render_template("edit_review.html", review=review, categories=categories)
+        categories = request.form.getlist("categories")
         detach_categories(review_id)
         attach_categories(categories, review_id)
-        update_review(title, content, review_id)
+        
         flash("Review updated")
         return redirect("/review/" + str(review_id))
 
@@ -183,23 +186,24 @@ def remove_review(review_id):
 
 @app.route("/add_review", methods=["GET", "POST"])
 def new_review():
-    if not session["user_id"]:
-        abort(403)
+    check_login()
+    categories = get_categories()
 
     if request.method == "GET":
-        categories = get_categories()
-        return render_template("add_review.html", categories=categories)
+        return render_template("add_review.html", categories=categories, filled={})
     
     if request.method == "POST":
         check_csrf()
         title = request.form["title"]
         content = request.form["content"]
-        categories = request.form.getlist("categories")
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
-        add_review(title, content, session["user_id"])
-        review_id = db.last_insert_id()
-        attach_categories(categories, review_id)
+        review_id = add_review(title, content, session["user_id"])
+        if not review_id:
+            flash("You have already posted a review with that title")
+            filled = {"content": content, "title": title}
+            return render_template("add_review.html", categories=categories, filled=filled)
+        attach_categories(request.form.getlist("categories"), review_id)
         flash("Review added")
         return redirect("/review/" + str(review_id))
 
@@ -213,6 +217,10 @@ def show_review(review_id):
 
 @app.route("/create", methods=["POST"])
 def create():
+    if "username" in session:
+        flash("Please log out first")
+        return redirect(request.url)
+    
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
@@ -221,22 +229,26 @@ def create():
 
     if password1 != password2:
         flash("Passwords do not match")
-        return redirect(request.url)
+        filled = {"username": username}
+        return render_template("/register.html", filled=filled)
     
     password_hash = generate_password_hash(password1)
     try:
         sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-        db.execute(sql, [username, password_hash])
+        with db.get_connection() as conn:
+            conn.execute(sql, [username, password_hash])
 
     except sqlite3.IntegrityError:
         flash("Username is already taken")
-        return redirect(request.url)
+        filled = {"username": username}
+        return render_template("/register.html", filled=filled)
     
     flash("Account created")
-    return redirect("/login")
+    return redirect("/")
 
 @app.route("/new_message", methods=["POST"])
 def new_message():
+    check_login()
     check_csrf()
     content = request.form["content"]
     review_id = request.form["review_id"]
