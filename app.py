@@ -36,18 +36,18 @@ def register():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
-    sql = "SELECT title FROM tags"
-    tags = db.query(sql)
+    sql = "SELECT title FROM categories"
+    categories = db.query(sql)
     if request.method == "GET":
-        return render_template("search.html", tags=tags)
+        return render_template("search.html", categories=categories)
     
     if request.method == "POST":
         query = request.form["query"]
         check_length(query, 3, 100)
-        if request.form["search"] == "tag":
+        if request.form["search"] == "category":
             sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
-                  FROM users u, reviews r, tags t, attach a 
-                  WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
+                  FROM users u, reviews r, categories t, attach a 
+                  WHERE t.title = ? AND a.category_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
             results = (db.query(sql, [query]))
         else:
             sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
@@ -55,7 +55,7 @@ def search():
                     WHERE (u.id = r.user_id AND r.title LIKE ?)
                     OR (u.id = r.user_id AND u.username LIKE ?)"""
             results = db.query(sql, ["%" + query + "%", "%" + query + "%"])
-        return render_template("search.html", query=query, results=results, tags=tags, search=request.form["search"])
+        return render_template("search.html", query=query, results=results, categories=categories, search=request.form["search"])
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -73,7 +73,7 @@ def login():
                 session["username"] = username
                 session["user_id"] = password_hash[0][0]
                 session["csrf_token"] = secrets.token_hex(16)
-                flash("Log in successfull")
+                flash("Log in successful")
                 return redirect("/")
         flash("Incorrect username or password")
         return redirect("/login")
@@ -187,23 +187,36 @@ def remove_message(message_id):
 
         return redirect("/review/" + str(review_id))
 
-def tags_to_string(tags):
+def string_to_categories(text):
+    if not text:
+        return None
+    check_length(text, 0, 100)
+    categories = []
+    for category in text.split(", "):
+        if text.count(category) > 1:
+            return "Invalid categories"
+        if len(category) < 3:
+            return "Invalid categories"
+        category.capitalize()
+        categories.append(category)
+    return categories
+
+def categories_to_string(categories):
     result = ""
-    for tag in tags:
-        result += tag[0] + ", "
+    for category in categories:
+        result += category[0] + ", "
     return result[:-2]
 
-def get_tags(review_id):
-    sql = "SELECT tags.title FROM tags, reviews, attach WHERE tags.id = attach.tag_id AND attach.review_id = reviews.id AND reviews.id = ?"
+def get_categories(review_id):
+    sql = "SELECT categories.title FROM categories, reviews, attach WHERE categories.id = attach.category_id AND attach.review_id = reviews.id AND reviews.id = ?"
     return db.query(sql, [review_id])
     
-def remove_tags(review_id):
+def remove_categories(review_id):
     sql = "SELECT attach.id FROM attach, reviews WHERE attach.review_id = reviews.id AND reviews.id = ?"
     ids = db.query(sql, [review_id])
-    if ids:
-        for id in ids:
-            sql = "DELETE FROM attach WHERE id = ?"
-            db.execute(sql, [id[0]])
+    for id in ids:
+        sql = "DELETE FROM attach WHERE id = ?"
+        db.execute(sql, [id[0]])
             
 @app.route("/edit_review/<int:review_id>", methods=["GET", "POST"])
 def edit_review(review_id):
@@ -216,26 +229,27 @@ def edit_review(review_id):
     if review["user_id"] != session["user_id"]:
         abort(403)
 
-    tags = tags_to_string(get_tags(review_id))
     if request.method == "GET":
-        
-        return render_template("edit_review.html", review=review, tags=tags)
+        sql = """SELECT c.title, c.id, a.id AS selected
+                 FROM categories c 
+                 LEFT JOIN attach a
+                 ON a.review_id = ? AND c.id = a.category_id"""
+        categories = (db.query(sql, [review_id]))
+
+        return render_template("edit_review.html", review=review, categories=categories)
 
     if request.method == "POST":
         check_csrf()
         title = request.form["title"]
         content = request.form["content"]
-        tags = request.form["tags"]
+        categories = request.form.getlist("categories")
         check_length(title, 1, 100)
-        check_length(tags, 0, 100)
         check_length(content, 1, 10000)
-        remove_tags(review_id)
-        if add_tags(tags, review_id):
-            sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
-            db.execute(sql, [title, content, review_id])
-            flash("Review updated")
-        else:
-            flash("Tags are too short or in incrrect format")
+        remove_categories(review_id)
+        add_categories(categories, review_id)
+        sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
+        db.execute(sql, [title, content, review_id])
+        flash("Review updated")
         return redirect("/review/" + str(review_id))
 
 @app.route("/remove_review/<int:review_id>", methods=["GET", "POST"])
@@ -259,26 +273,10 @@ def remove_review(review_id):
         flash("Review removed")
         return redirect("/review/" + str(review_id))
     
-def add_tags(tags, review_id):
-    if tags:
-        for tag in tags.split(", "):
-            if len(tag) < 3:
-                return False
-            tag.lower()
-            sql = "SELECT id FROM tags WHERE title = ?"
-            tag_id = (db.query(sql, [tag]))
-
-            if not tag_id:
-                sql = "INSERT INTO tags (title) VALUES (?)"
-                db.execute(sql, [tag])
-                tag_id = db.last_insert_id()
-
-            else:
-                tag_id = tag_id[0][0]
-
-            sql = "INSERT INTO attach (tag_id, review_id) VALUES (?, ?)"
-            db.execute(sql, [tag_id, review_id])
-    return True
+def add_categories(categories, review_id):
+    for category_id in categories:
+        sql = "INSERT INTO attach (category_id, review_id) VALUES (?, ?)"
+        db.execute(sql, [category_id, review_id])
 
 @app.route("/add_review", methods=["GET", "POST"])
 def new_review():
@@ -286,20 +284,21 @@ def new_review():
         abort(403)
 
     if request.method == "GET":
-        return render_template("add_review.html")
+        sql = "SELECT title, id from categories"
+        categories = db.query(sql, [])
+        return render_template("add_review.html", categories=categories)
     
     if request.method == "POST":
         check_csrf()
         title = request.form["title"]
         content = request.form["content"]
-        tags = request.form["tags"]
+        categories = request.form.getlist("categories")
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
-        check_length(tags, 0, 100)
         sql = "INSERT INTO reviews (title, content, user_id, time) VALUES (?, ?, ?, datetime('now'))"
         db.execute(sql, [title, content, session["user_id"]])
         review_id = db.last_insert_id()
-        add_tags(tags, review_id)
+        add_categories(categories, review_id)
         flash("Review added")
         return redirect("/review/" + str(review_id))
 
@@ -311,23 +310,23 @@ def show_review(review_id):
         abort(404)
 
     review = query[0]
-    sql = "SELECT t.title FROM tags t, attach a WHERE a.review_id = ? AND t.id = a.tag_id"
-    tags = (db.query(sql, [review_id]))
+    sql = "SELECT t.title FROM categories t, attach a WHERE a.review_id = ? AND t.id = a.category_id"
+    categories = (db.query(sql, [review_id]))
     sql = """SELECT u.username, m.content, m.id, m.time, m.user_id 
              FROM users u, messages m, reviews r 
              WHERE r.id = ? AND r.id = m.review_id AND m.user_id = u.id"""
     messages = (db.query(sql, [review_id]))
     sql = "SELECT users.username FROM users, reviews WHERE users.id = reviews.user_id AND reviews.id = ?"
     user = db.query(sql, [review_id])[0]
-    return render_template("review.html", review=review, tags=tags, messages=messages, user=user)
+    return render_template("review.html", review=review, categories=categories, messages=messages, user=user)
     
-@app.route("/tags/<string:tag>")
-def show_tags(tag):
+@app.route("/categories/<string:category>")
+def show_categories(category):
     sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
-             FROM users u, reviews r, tags t, attach a 
-             WHERE t.title = ? AND a.tag_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
-    reviews = (db.query(sql, [tag]))
-    return render_template("tags.html", reviews=reviews, tag=tag)
+             FROM users u, reviews r, categories t, attach a 
+             WHERE t.title = ? AND a.category_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
+    reviews = (db.query(sql, [category]))
+    return render_template("categories.html", reviews=reviews, category=category)
 
 @app.route("/create", methods=["POST"])
 def create():
@@ -350,7 +349,7 @@ def create():
         return redirect(request.url)
     
     flash("Account created")
-    return redirect("/")
+    return redirect("/login")
 
 @app.route("/new_message", methods=["POST"])
 def new_message():

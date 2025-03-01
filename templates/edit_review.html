@@ -12,10 +12,16 @@
     Review<br />
     <textarea name="content" rows="10" cols="80" maxlength="10000" required>{{ review.content }}</textarea>
   </p>
+  <p>Choose categories:</p>
+  {% for category in categories %}
   <p>
-    Tags (multiple are seperated with ", ")<br />
-    <input type="text" name="tags" value="{{ tags }}" maxlength="100"/>
+    {% if category.selected %}
+    <input type="checkbox" name="categories" value="{{ category.id }}" checked /> {{ category.title }}
+    {% else%}
+    <input type="checkbox" name="categories" value="{{ category.id }}" /> {{ category.title }}
+    {% endif %}
   </p>
+  {% endfor %}
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Submit" />
 </form>

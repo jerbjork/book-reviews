@@ -9,19 +9,19 @@
   </p>
 
   <div class="content">{{review.content}}</div>
-  {% if tags %}
+  {% if categories %}
   <p>
-    Tags:
-    {% for tag in tags %}
+    categories:
+    {% for category in categories %}
     <form action="/search" method="post">
-      <input type="hidden" name="query" value="{{ tag.title }}">
-      <input type="submit" value="{{ tag.title }}" />
-      <input type="hidden" name="search" value="tag">
+      <input type="hidden" name="query" value="{{ category.title }}">
+      <input type="submit" value="{{ category.title }}" />
+      <input type="hidden" name="search" value="category">
     </form>
     {% endfor %}
   </p>
   {% else %}
-  <p>No tags</p>
+  <p>No categories</p>
   {% endif %}
   
   {% if review.user_id == session.user_id %}

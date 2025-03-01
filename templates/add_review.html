@@ -13,8 +13,12 @@
     <textarea name="content" rows="10" cols="80" maxlength="15000" required></textarea>
   </p>
   <p>
-    Tags (multiple are seperated with ", ")<br />
-    <input type="text" name="tags" maxlength="100"/>
+    <p>Choose categories:</p>
+    {% for category in categories %}
+    <p>
+      <input type="checkbox" name="categories" value="{{ category.id }}" /> {{ category.title }}
+    </p>
+    {% endfor %}
   </p>
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Submit" />
