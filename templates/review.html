@@ -8,7 +8,7 @@
     Submitted {{ review.time }} by <a href="/user/{{ review.user_id }}"> {{ review.username }}</a> 
   </p>
 
-  <div class="content">{{review.content}}</div>
+  <div class="content">{{ review.content | show_lines }}</div>
   {% if categories %}
   <p>
     categories:
@@ -59,7 +59,7 @@
     Posted {{ message.time }} by user <a href="/user/{{ message.user_id }}">{{ message.username }}</a>:
   </p>
   <p>
-    {{ message.content }}
+    {{ message.content | show_lines }}
   </p>
 
   {% if message.username == session.username %}

@@ -1,5 +1,6 @@
 import sqlite3
 import secrets
+import markupsafe
 from flask import Flask, redirect, render_template, request, session, abort, make_response, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
@@ -18,6 +19,12 @@ app.secret_key = config.secret_key
 def index():
     reviews = latest_reviews()
     return render_template("index.html", reviews=reviews)
+
+@app.template_filter()
+def show_lines(content):
+    content = str(markupsafe.escape(content))
+    content = content.replace("\n", "<br />")
+    return markupsafe.Markup(content)
 
 @app.route("/register")
 def register():
