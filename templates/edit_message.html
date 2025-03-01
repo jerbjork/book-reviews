@@ -4,8 +4,8 @@
 {% block content %}
 <form action="/edit_message/{{ message.id }}" method="post">
   <p>
-    Message:<br />
-    <textarea name="content" rows="10" cols="80" maxlength="500" required >{{ message.content }}</textarea>
+    <label for="content">Message:</label><br />
+    <textarea id="content" name="content" rows="10" cols="80" maxlength="500" required >{{ message.content }}</textarea>
   </p>
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
   <input type="submit" value="Update" />
