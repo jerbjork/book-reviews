@@ -1,3 +1,5 @@
+import sqlite3
+from flask import abort
 import db
 
 def get_categories():
@@ -24,4 +26,8 @@ def detach_categories(id):
 def attach_categories(categories, id):
     for category_id in categories:
         sql = "INSERT INTO attach (category_id, review_id) VALUES (?, ?)"
-        db.execute(sql, [category_id, id])
+        try:
+            with db.get_connection() as conn:
+                conn.execute(sql, [category_id, id])
+        except sqlite3.IntegrityError:
+            abort(403)
