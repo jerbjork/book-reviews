@@ -4,58 +4,38 @@ from flask import Flask, redirect, render_template, request, session, abort, mak
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
+
+from messages import get_message, update_message, delete_message, get_review_id, get_review_messages, add_message
+from reviews import latest_reviews, search_reviews, get_user_reviews, get_review_data, update_review, set_review_removed, add_review
+from categories import get_categories, get_review_categories, get_selected_categories, attach_categories, detach_categories
+from users import get_password_hash, get_user_data, add_profile_picture, get_image
+from validations import check_length, check_csrf
+
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
-def check_length(text, lower_limit, upper_limit):
-        if len(text) < lower_limit:
-            abort(411)
-            redirect(request.url)
-        if len(text) > upper_limit:
-            abort(413)
-            redirect(request.url)
-
-def check_csrf():
-    if request.form["csrf_token"] != session["csrf_token"]:
-        abort(403)
-
 @app.route("/")
 def index():
-    sql = """SELECT u.username, r.id, r.title, r.time, r.user_id
-             FROM users u, reviews r
-             WHERE u.id = r.user_id AND r.removed = 0
-             ORDER BY r.id DESC
-             LIMIT 20"""
-    reviews = (db.query(sql, []))
+    reviews = latest_reviews()
     return render_template("index.html", reviews=reviews)
 
 @app.route("/register")
 def register():
     return render_template("register.html")
 
-
 @app.route("/search", methods=["GET", "POST"])
 def search():
-    sql = "SELECT title FROM categories"
-    categories = db.query(sql)
+    categories = get_categories()
+
     if request.method == "GET":
         return render_template("search.html", categories=categories)
     
     if request.method == "POST":
         query = request.form["query"]
+        search = request.form["search"]
         check_length(query, 3, 100)
-        if request.form["search"] == "category":
-            sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
-                  FROM users u, reviews r, categories t, attach a 
-                  WHERE t.title = ? AND a.category_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
-            results = (db.query(sql, [query]))
-        else:
-            sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
-                    FROM users u, reviews r
-                    WHERE (u.id = r.user_id AND r.title LIKE ?)
-                    OR (u.id = r.user_id AND u.username LIKE ?)"""
-            results = db.query(sql, ["%" + query + "%", "%" + query + "%"])
-        return render_template("search.html", query=query, results=results, categories=categories, search=request.form["search"])
+        results = search_reviews(search, query)
+        return render_template("search.html", query=query, results=results, categories=categories, search=search)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -65,16 +45,15 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        sql = "SELECT id, password_hash FROM users WHERE username = ?"
-        password_hash = (db.query(sql, [username]))
+        password_hash = get_password_hash(username)
         if password_hash:
-
             if check_password_hash(password_hash[0][1], password):
                 session["username"] = username
                 session["user_id"] = password_hash[0][0]
                 session["csrf_token"] = secrets.token_hex(16)
                 flash("Log in successful")
                 return redirect("/")
+            
         flash("Incorrect username or password")
         return redirect("/login")
 
@@ -89,16 +68,9 @@ def logout():
 
 @app.route("/user/<int:user_id>", methods=["GET"])
 def show_user(user_id):
-    sql = "SELECT * FROM users WHERE id = ?"
-    query = db.query(sql, [user_id])
-    if not query:
-        abort(404)
-
-    sql = "SELECT * FROM reviews WHERE user_id = ?"
-    reviews = db.query(sql, [user_id])
-    sql = "SELECT * FROM messages WHERE user_id = ?"
-    messages = db.query(sql, [user_id])
-    return render_template("userpage.html", user=query[0], reviews=reviews, messages=messages)
+    user = get_user_data(user_id)
+    reviews = get_user_reviews(user_id)
+    return render_template("userpage.html", user=user, reviews=reviews)
 
 @app.route("/add_image", methods=["GET", "POST"])
 def add_image():
@@ -120,30 +92,21 @@ def add_image():
             flash("Filesize exceeds 1 MB")
             return redirect("/add_image")
         
-        sql = "UPDATE users SET image = ? WHERE id = ?"
-        db.execute(sql, [image, session["user_id"]])
+        add_profile_picture(image, session["user_id"])
         flash("Profile picture updated")
         return redirect("/user/" + str(session["user_id"]))
     
 @app.route("/image/<int:user_id>")
 def show_image(user_id):
-    sql = "SELECT image FROM users WHERE id = ?"
-    image = (db.query(sql, [user_id]))
-    if not image:
-        abort(404)
-
+    image = get_image(user_id)
     response = make_response(bytes(image[0][0]))
     response.headers.set("Content-Type", "image*")
     return response
 
 @app.route("/edit_message/<int:message_id>", methods=["GET", "POST"])
 def edit_message(message_id):
-    sql = "SELECT * FROM messages WHERE id = ?"
-    query = db.query(sql, [message_id])
-    if not query:
-        abort(404)
 
-    message = query[0]
+    message = get_message(message_id)
     if message["user_id"] != session["user_id"]:
         abort(403)
 
@@ -154,21 +117,14 @@ def edit_message(message_id):
         check_csrf()
         content = request.form["content"]
         check_length(content, 1, 1000)
-        sql = "UPDATE messages SET content = ? WHERE id = ?"
-        db.execute(sql, [content, message_id])
-        sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
-        review_id = db.query(sql, [message_id])[0][0]
+        update_message(content, message_id)
         flash("Comment updated")
-        return redirect("/review/" + str(review_id))
+        return redirect("/review/" + str(message["review_id"]))
     
 @app.route("/remove_message/<int:message_id>", methods=["GET", "POST"])
 def remove_message(message_id):
-    sql = "SELECT * FROM messages WHERE id = ?"
-    query = db.query(sql, [message_id])
-    if not query:
-        abort(404)
 
-    message = query[0]
+    message = get_message(message_id)
     if message["user_id"] != session["user_id"]:
         abort(403)
 
@@ -177,65 +133,22 @@ def remove_message(message_id):
 
     if request.method == "POST":
         check_csrf()
-
+        review_id = get_review_id(message_id)
         if "continue" in request.form:
-                sql = "SELECT r.id FROM reviews r, messages m WHERE m.review_id = r.id AND m.id = ?"
-                review_id = db.query(sql, [message_id])[0][0]
-                sql = "DELETE FROM messages WHERE id = ?"
-                db.execute(sql, [message_id])
-                flash("Comment deleted")
+            delete_message(message_id)
+            flash("Comment deleted")
 
         return redirect("/review/" + str(review_id))
-
-def string_to_categories(text):
-    if not text:
-        return None
-    check_length(text, 0, 100)
-    categories = []
-    for category in text.split(", "):
-        if text.count(category) > 1:
-            return "Invalid categories"
-        if len(category) < 3:
-            return "Invalid categories"
-        category.capitalize()
-        categories.append(category)
-    return categories
-
-def categories_to_string(categories):
-    result = ""
-    for category in categories:
-        result += category[0] + ", "
-    return result[:-2]
-
-def get_categories(review_id):
-    sql = "SELECT categories.title FROM categories, reviews, attach WHERE categories.id = attach.category_id AND attach.review_id = reviews.id AND reviews.id = ?"
-    return db.query(sql, [review_id])
-    
-def remove_categories(review_id):
-    sql = "SELECT attach.id FROM attach, reviews WHERE attach.review_id = reviews.id AND reviews.id = ?"
-    ids = db.query(sql, [review_id])
-    for id in ids:
-        sql = "DELETE FROM attach WHERE id = ?"
-        db.execute(sql, [id[0]])
-            
+        
 @app.route("/edit_review/<int:review_id>", methods=["GET", "POST"])
 def edit_review(review_id):
-    sql = "SELECT * FROM reviews WHERE id = ?"
-    query = db.query(sql, [review_id])
-    if not query:
-        abort(404)
 
-    review = query[0]
+    review = get_review_data(review_id)
     if review["user_id"] != session["user_id"]:
         abort(403)
 
     if request.method == "GET":
-        sql = """SELECT c.title, c.id, a.id AS selected
-                 FROM categories c 
-                 LEFT JOIN attach a
-                 ON a.review_id = ? AND c.id = a.category_id"""
-        categories = (db.query(sql, [review_id]))
-
+        categories = get_selected_categories(review_id)
         return render_template("edit_review.html", review=review, categories=categories)
 
     if request.method == "POST":
@@ -245,38 +158,28 @@ def edit_review(review_id):
         categories = request.form.getlist("categories")
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
-        remove_categories(review_id)
-        add_categories(categories, review_id)
-        sql = "UPDATE reviews SET (title, content, removed) = (?, ?, 0)  WHERE id = ?"
-        db.execute(sql, [title, content, review_id])
+        detach_categories(review_id)
+        attach_categories(categories, review_id)
+        update_review(title, content, review_id)
         flash("Review updated")
         return redirect("/review/" + str(review_id))
 
 @app.route("/remove_review/<int:review_id>", methods=["GET", "POST"])
 def remove_review(review_id):
-    sql = "SELECT * FROM reviews WHERE id = ?"
-    review = (db.query(sql, [review_id]))
-    if not review:
-        abort(404)
 
-    if review[0]["user_id"] != session["user_id"]:
+    review = get_review_data(review_id)
+    if review["user_id"] != session["user_id"]:
         abort(403)
 
     if request.method == "GET":
-        return render_template("remove_review.html", review=review[0])
+        return render_template("remove_review.html", review=review)
 
     if request.method == "POST":
         check_csrf()
         if "continue" in request.form:
-            sql = "UPDATE reviews SET removed = ? WHERE id = ?"
-            db.execute(sql, [1, review_id])
-        flash("Review removed")
+            set_review_removed(review_id)
+            flash("Review removed")
         return redirect("/review/" + str(review_id))
-    
-def add_categories(categories, review_id):
-    for category_id in categories:
-        sql = "INSERT INTO attach (category_id, review_id) VALUES (?, ?)"
-        db.execute(sql, [category_id, review_id])
 
 @app.route("/add_review", methods=["GET", "POST"])
 def new_review():
@@ -284,8 +187,7 @@ def new_review():
         abort(403)
 
     if request.method == "GET":
-        sql = "SELECT title, id from categories"
-        categories = db.query(sql, [])
+        categories = get_categories()
         return render_template("add_review.html", categories=categories)
     
     if request.method == "POST":
@@ -295,38 +197,19 @@ def new_review():
         categories = request.form.getlist("categories")
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
-        sql = "INSERT INTO reviews (title, content, user_id, time) VALUES (?, ?, ?, datetime('now'))"
-        db.execute(sql, [title, content, session["user_id"]])
+        add_review(title, content, session["user_id"])
         review_id = db.last_insert_id()
-        add_categories(categories, review_id)
+        attach_categories(categories, review_id)
         flash("Review added")
         return redirect("/review/" + str(review_id))
 
 @app.route("/review/<int:review_id>")
 def show_review(review_id):
-    sql = "SELECT * FROM reviews WHERE id = ?"
-    query = db.query(sql, [review_id])
-    if not query:
-        abort(404)
 
-    review = query[0]
-    sql = "SELECT t.title FROM categories t, attach a WHERE a.review_id = ? AND t.id = a.category_id"
-    categories = (db.query(sql, [review_id]))
-    sql = """SELECT u.username, m.content, m.id, m.time, m.user_id 
-             FROM users u, messages m, reviews r 
-             WHERE r.id = ? AND r.id = m.review_id AND m.user_id = u.id"""
-    messages = (db.query(sql, [review_id]))
-    sql = "SELECT users.username FROM users, reviews WHERE users.id = reviews.user_id AND reviews.id = ?"
-    user = db.query(sql, [review_id])[0]
-    return render_template("review.html", review=review, categories=categories, messages=messages, user=user)
-    
-@app.route("/categories/<string:category>")
-def show_categories(category):
-    sql = """SELECT u.username, r.id, r.title, r.user_id, r.removed 
-             FROM users u, reviews r, categories t, attach a 
-             WHERE t.title = ? AND a.category_id = t.id AND a.review_id = r.id AND u.id = r.user_id"""
-    reviews = (db.query(sql, [category]))
-    return render_template("categories.html", reviews=reviews, category=category)
+    review = get_review_data(review_id)
+    categories = get_review_categories(review_id)
+    messages = get_review_messages(review_id)
+    return render_template("review.html", review=review, categories=categories, messages=messages)
 
 @app.route("/create", methods=["POST"])
 def create():
@@ -337,7 +220,8 @@ def create():
     check_length(password1, 8, 20)
 
     if password1 != password2:
-        return "Passwords do not match"
+        flash("Passwords do not match")
+        return redirect(request.url)
     
     password_hash = generate_password_hash(password1)
     try:
@@ -357,7 +241,6 @@ def new_message():
     content = request.form["content"]
     review_id = request.form["review_id"]
     check_length(content, 1, 500)
-    sql = "INSERT INTO messages (content, time, user_id, review_id) VALUES (?, datetime('now'), ?, ?)"
-    db.execute(sql, [content, session["user_id"], review_id])
+    add_message(content, session["user_id"], review_id)
     flash("Comment posted")
     return redirect("/review/" + str(review_id))

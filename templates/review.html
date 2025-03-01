@@ -5,7 +5,7 @@
 {% if review.removed == 0 %}
   <h2>{{ review.title }}</h2>
   <p> 
-    Submitted {{ review.time }} by <a href="/user/{{ review.user_id }}"> {{ user.username }}</a> 
+    Submitted {{ review.time }} by <a href="/user/{{ review.user_id }}"> {{ review.username }}</a> 
   </p>
 
   <div class="content">{{review.content}}</div>
