@@ -1,16 +1,21 @@
 import sqlite3
 import secrets
-import markupsafe
-from flask import Flask, redirect, render_template, request, session, abort, make_response, flash
-from werkzeug.security import generate_password_hash, check_password_hash
-import config
-import db
 
-from messages import get_message, update_message, delete_message, get_review_id, get_review_messages, add_message
-from reviews import latest_reviews, search_reviews, get_user_reviews, get_review_data, update_review, set_review_removed, add_review
-from categories import get_categories, get_review_categories, get_selected_categories, attach_categories, detach_categories
+from flask import Flask
+from flask import redirect, render_template, request, session, abort, make_response, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+import markupsafe
+
+from messages import (get_message, update_message, delete_message,
+                      get_review_id, get_review_messages, add_message)
+from reviews import (latest_reviews, search_reviews, get_user_reviews,
+                     get_review_data, update_review, set_review_removed, add_review)
+from categories import (get_categories, get_review_categories, get_selected_categories,
+                        attach_categories, detach_categories)
 from users import get_password_hash, get_user_data, add_profile_picture, get_image
 from validations import check_length, check_csrf, check_login
+import config
+import db
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -36,13 +41,13 @@ def search():
 
     if request.method == "GET":
         return render_template("search.html", categories=categories)
-    
+
     if request.method == "POST":
         query = request.form["query"]
-        search = request.form["search"]
+        search_type = request.form["search"]
         check_length(query, 3, 100)
-        results = search_reviews(search, query)
-        return render_template("search.html", query=query, results=results, categories=categories, search=search)
+        results = search_reviews(search_type, query)
+        return render_template("search.html", query=query, results=results, categories=categories)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -54,13 +59,14 @@ def login():
         password = request.form["password"]
         password_hash = get_password_hash(username)
         if password_hash:
+
             if check_password_hash(password_hash[0][1], password):
                 session["username"] = username
                 session["user_id"] = password_hash[0][0]
                 session["csrf_token"] = secrets.token_hex(16)
                 flash("Log in successful")
                 return redirect("/")
-            
+
         flash("Incorrect username or password")
         filled = {"username": username}
         return render_template("/login.html", filled=filled)
@@ -93,16 +99,16 @@ def add_image():
         if not file.filename.endswith((".jpg", ".jpeg", ".png")):
             flash("Incorrect file format")
             return redirect("/add_image")
-        
+
         image = file.read()
         if len(image) > 1000 * 1024:
             flash("Filesize exceeds 1 MB")
             return redirect("/add_image")
-        
+
         add_profile_picture(image, session["user_id"])
         flash("Profile picture updated")
         return redirect("/user/" + str(session["user_id"]))
-    
+
 @app.route("/image/<int:user_id>")
 def show_image(user_id):
     image = get_image(user_id)
@@ -127,7 +133,7 @@ def edit_message(message_id):
         update_message(content, message_id)
         flash("Comment updated")
         return redirect("/review/" + str(message["review_id"]))
-    
+
 @app.route("/remove_message/<int:message_id>", methods=["GET", "POST"])
 def remove_message(message_id):
 
@@ -146,7 +152,7 @@ def remove_message(message_id):
             flash("Comment deleted")
 
         return redirect("/review/" + str(review_id))
-        
+
 @app.route("/edit_review/<int:review_id>", methods=["GET", "POST"])
 def edit_review(review_id):
 
@@ -164,13 +170,14 @@ def edit_review(review_id):
         content = request.form["content"]
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
+
         if update_review(title, content, review_id):
             flash("You have already posted a review with that title")
             return render_template("edit_review.html", review=review, categories=categories)
+
         categories = request.form.getlist("categories")
         detach_categories(review_id)
         attach_categories(categories, review_id)
-        
         flash("Review updated")
         return redirect("/review/" + str(review_id))
 
@@ -198,7 +205,7 @@ def new_review():
 
     if request.method == "GET":
         return render_template("add_review.html", categories=categories, filled={})
-    
+
     if request.method == "POST":
         check_csrf()
         title = request.form["title"]
@@ -206,10 +213,12 @@ def new_review():
         check_length(title, 1, 100)
         check_length(content, 1, 10000)
         review_id = add_review(title, content, session["user_id"])
+
         if not review_id:
             flash("You have already posted a review with that title")
             filled = {"content": content, "title": title}
             return render_template("add_review.html", categories=categories, filled=filled)
+
         attach_categories(request.form.getlist("categories"), review_id)
         flash("Review added")
         return redirect("/review/" + str(review_id))
@@ -227,7 +236,7 @@ def create():
     if "username" in session:
         flash("Please log out first")
         return redirect(request.url)
-    
+
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
@@ -238,7 +247,7 @@ def create():
         flash("Passwords do not match")
         filled = {"username": username}
         return render_template("/register.html", filled=filled)
-    
+
     password_hash = generate_password_hash(password1)
     try:
         sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
@@ -249,7 +258,7 @@ def create():
         flash("Username is already taken")
         filled = {"username": username}
         return render_template("/register.html", filled=filled)
-    
+
     flash("Account created")
     return redirect("/")
 
