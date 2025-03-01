@@ -5,6 +5,8 @@ def check_length(text, lower_limit, upper_limit):
         abort(403)
 
 def check_csrf():
+    if "csrf_token" not in request.form:
+        abort(403)
     if request.form["csrf_token"] != session["csrf_token"]:
         abort(403)
 

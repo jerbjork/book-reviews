@@ -6,11 +6,7 @@
     <p>
       Searchterm:
       {% if query %}
-      {% if search == "category" %}
-      <input type="text" name="query" maxlength="100" minlength="3" required />
-      {% else %}
       <input type="text" name="query" value="{{ query }}" maxlength="100" minlength="3" required />
-      {% endif %}
       {% else %}
       <input type="text" name="query" maxlength="100" minlength="3" required/>
       {% endif %}
@@ -43,8 +39,8 @@
   <form action="/search" method="post">
     <p>
     <input type="hidden" name="query" value="{{ category.title }}">
-    <input type="submit" value="{{ category.title }}" />
     <input type="hidden" name="search" value="category">
+    <input type="submit" value="{{ category.title }}" />
     </p>
   </form>
   {% endfor %}

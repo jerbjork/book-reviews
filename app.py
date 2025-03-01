@@ -3,7 +3,6 @@ import secrets
 
 from flask import Flask
 from flask import redirect, render_template, request, session, abort, make_response, flash
-from werkzeug.security import generate_password_hash, check_password_hash
 import markupsafe
 
 from messages import (get_message, update_message, delete_message,
@@ -12,7 +11,7 @@ from reviews import (latest_reviews, search_reviews, get_user_reviews,
                      get_review_data, update_review, set_review_removed, add_review)
 from categories import (get_categories, get_review_categories, get_selected_categories,
                         attach_categories, detach_categories)
-from users import get_password_hash, get_user_data, add_profile_picture, get_image
+from users import (get_user_data, add_profile_picture, get_image, add_account, attempt_login)
 from validations import check_length, check_csrf, check_login
 import config
 import db
@@ -57,15 +56,14 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        password_hash = get_password_hash(username)
-        if password_hash:
 
-            if check_password_hash(password_hash[0][1], password):
-                session["username"] = username
-                session["user_id"] = password_hash[0][0]
-                session["csrf_token"] = secrets.token_hex(16)
-                flash("Log in successful")
-                return redirect("/")
+        user_id = attempt_login(username, password)
+        if user_id:
+            session["username"] = username
+            session["user_id"] = user_id
+            session["csrf_token"] = secrets.token_hex(16)
+            flash("Log in successful")
+            return redirect("/")
 
         flash("Incorrect username or password")
         filled = {"username": username}
@@ -247,14 +245,7 @@ def create():
         flash("Passwords do not match")
         filled = {"username": username}
         return render_template("/register.html", filled=filled)
-
-    password_hash = generate_password_hash(password1)
-    try:
-        sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-        with db.get_connection() as conn:
-            conn.execute(sql, [username, password_hash])
-
-    except sqlite3.IntegrityError:
+    if not add_account(username, password1):
         flash("Username is already taken")
         filled = {"username": username}
         return render_template("/register.html", filled=filled)
