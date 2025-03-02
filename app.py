@@ -1,4 +1,3 @@
-import sqlite3
 import secrets
 
 from flask import Flask
@@ -14,7 +13,6 @@ from categories import (get_categories, get_review_categories, get_selected_cate
 from users import (get_user_data, add_profile_picture, get_image, add_account, attempt_login)
 from validations import check_length, check_csrf, check_login
 import config
-import db
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -63,7 +61,7 @@ def login():
             session["user_id"] = user_id
             session["csrf_token"] = secrets.token_hex(16)
             flash("Log in successful")
-            return redirect("/")
+            return redirect("/user/"+ str(user_id))
 
         flash("Incorrect username or password")
         filled = {"username": username}
@@ -251,7 +249,7 @@ def create():
         return render_template("/register.html", filled=filled)
 
     flash("Account created")
-    return redirect("/")
+    return render_template("login.html", filled={})
 
 @app.route("/new_message", methods=["POST"])
 def new_message():
