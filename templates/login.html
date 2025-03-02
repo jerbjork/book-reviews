@@ -1,13 +1,12 @@
 {% extends "layout.html" %}
 {% block title %}Login{% endblock %}
+
 {% block content %}
 {% if session.username %}
-  
   <p>Signed in as <a href="/user/{{session.user_id}}">{{ session.username }}</p>
   <p><a href="/logout">Log out</a></p>
   
 {% else %}
-
   <form action="/login" method="post">
     <p>
       Username: <br />
@@ -21,5 +20,3 @@
   </form>
 {% endif %}
 {% endblock %}
-
-

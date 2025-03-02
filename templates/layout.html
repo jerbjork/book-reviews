@@ -29,9 +29,9 @@
   </div>
 
   {% for message in get_flashed_messages() %}
-  <p>
+  <div class="info">
     <b>{{ message }}</b>
-  </p>
+  </div>
   {% endfor %}
 
   <div class="content">

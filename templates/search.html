@@ -15,7 +15,7 @@
     <input type="submit" value="Search" />
   </form>
 
-  {% if query %}
+ 
   {% if results %}
   {% for result in results %}
     {% if result.removed == 0 %}
@@ -30,7 +30,6 @@
   {% endfor %}
   {% else %}
   <p>No results found</p>
-  {% endif %}
   {% endif %}
 
   <hr> 

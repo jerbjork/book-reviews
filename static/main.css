@@ -5,19 +5,27 @@ header {
     margin: 0.5em 0;
   }
   
-  .nav {
-    background-color: lightgrey;
-    padding: 0.5em;
-    margin: 0.5em 0;
-  }
-  
-  .content {
-    background-color: white;
-    padding: 1em;
-    max-width: 80%;
-    word-wrap: break-word;
-    margin: 1em 0;
-  }
+.nav {
+  background-color: lightgrey;
+  padding: 0.5em;
+  margin: 0.5em 0;
+}
+
+.content {
+  background-color: white;
+  padding: 1em;
+  max-width: 80%;
+  word-wrap: break-word;
+  margin: 1em 0;
+}
+
+.info {
+  border: 2px solid black;
+  margin: 1em;
+  padding: 0.5em;
+  background-color: rgb(167, 167, 169);
+  color: white;
+}
 
 nav {
     text-align: center;
@@ -40,4 +48,4 @@ nav {
 
 nav li:not(:first-of-type) {
     margin-left: -0.25em;
-  } 
+  }
