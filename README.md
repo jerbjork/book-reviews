@@ -1,29 +1,29 @@
 # Book reviews
-Intended features:
-<ul>
-<li>This application lets users share book reviews.</li>
-<li>The user can create an account and log onto the site.</li>
-<li>The user can post reviews and edit or delete their own reviews.</li>
-<li>The reviews include the title of the book, author, and genre tags.</li>
-<li>Reviews can be found by selecting genre, or by search term.</li>
-<li>Users can leave comments on reviews, these comments are displayed below the review.</li>
-<li>The user page lists the reviews the user has written, and notifies if there are any unread comments.</li>
-</ul>
 
-Currently implemented:
-<ul>
-<li>The user can create an account and log onto the site.</li>
-<li>The user can post reviews.</li>
-<li>Reviews can be found by choosing a tag.</li>
-<li>Users can leave comments on reviews, these comments are displayed below the review.</li>
-<li>Users can edit or remove their own comments.</li>
-<li>The user page shows a profile picture, and lists the reviews the user has written.</li>
-</ul>
+## Application features:
 
-Instructions:
-<p>git clone https://github.com/jerbjork/book-reviews.git</p>
-<p>cd book-reviews/</p>
-<p>sqlite3 database.db < schema.sql</p>
-<p>sqlite3 database.db < init.sql</p>
-<p>pip install flask</p>
-<p>flask run</p>
+* This application lets users share book reviews.
+* The user can create an account and log onto the site.
+* The user can post reviews and edit or delete their own reviews.
+* The reviews include the title of the book and genre tags.
+* Reviews can be found by selecting genre, or by search term.
+* Users can leave comments on reviews, these comments are displayed below the review.
+* The user page shows a profile picture, and lists the reviews the user has written.
+
+## Installation
+
+Install the 'flask' library
+```
+$ pip install flask
+```
+Create the database and add inital data:
+
+```
+$ sqlite3 database.db < schema.sql
+$ sqlite3 database.db < init.sql
+```
+Run the application:
+
+```
+$ flask run
+```
